@@ -1,4 +1,4 @@
-##Food API:
+Food API:
 
     get_token()
         get token that use to access get_foods API
@@ -17,7 +17,7 @@
             if food exist return empty list
             else if error ouccur return None
 
-##User API:
+User API:
 
     checkAccount(account)
         check if account exist or not
