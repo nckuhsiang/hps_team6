@@ -1,45 +1,59 @@
 import pymysql
-import hashlib
+import uuid
 
-"""
-input:
-    account(string)
-    password(string)
-output:
-    result(bool):create success or fail
-"""
-def createUser(account,password):
-    result = True
-    md5_hash = hashlib.md5()
-    md5_hash.update(password.encode())
-    password = md5_hash.hexdigest()
+def checkAccount(account):
     db = pymysql.connect(
     host= '34.80.39.159',
-    user='chench',
+    user='root',
     database= 'Fiteat')
     cursor = db.cursor()
-    sql = "INSERT INTO User (account,password) VALUES ('" + account + "', '"+ password + "');"
+    sql = "SELECT account FROM User WHERE account='" + account + "';"
+    cursor.execute(sql)
+    row = cursor.fetchone()
+    try:
+        if row[0]:
+            return False
+    except:
+        return True
+
+def createUser(account,height,weight,workload,BMI,TDEE):
+    if not checkAccount(account):
+        print("account has already existed!")
+        return False
+    db = pymysql.connect(
+    host= '34.80.39.159',
+    user='root',
+    database= 'Fiteat')
+    cursor = db.cursor()
+    #create user
+    sql = "INSERT INTO User (account,height,weight,workload,BMI,TDEE) VALUES ('" + \
+    account + "'," + str(height) + "," + str(weight) + ",'" + workload + "'," + str(BMI) + "," + str(TDEE) + ");"
     try:
         cursor.execute(sql)
         db.commit()
     except:
         db.rollback()
-        result = False
         print('create fail,please check the data')
+        return False
+    
+    #enter user info into machine
+    macaddr = uuid.UUID(int = uuid.getnode()).hex[-12:]
+    sql = "INSERT INTO Machine_user_info (macaddr,account) VALUES ('" + macaddr + "','" + account + "');"
+    try:
+        cursor.execute(sql)
+        db.commit()
+    except:
+        db.rollback()
+        print("enter fail")
+        return False
     db.close()
-    return result
+    return True
          
-"""
-input:
-    account(string),height(float),weight(float),workload(string),BMI(float),TDEE(float)
-output:
-    result(bool):update success or fail
-"""
 def updateUser(account,height,weight,workload,BMI,TDEE):
     result = True
     db = pymysql.connect(
     host= '34.80.39.159',
-    user='chench',
+    user='root',
     database= 'Fiteat')
     cursor = db.cursor()
     sql = "UPDATE User SET height=" + str(height) + ",weight=" + str(weight) +",workload='"+ workload +"',BMI="+ str(BMI) + ",TDEE="+ str(TDEE) + " WHERE account='" + account + "';"
@@ -53,18 +67,11 @@ def updateUser(account,height,weight,workload,BMI,TDEE):
     db.close()
     return result
     
-
-"""
-input:
-    account(string):account that you want to delete
-output:
-    result(bool):delete success or fail
-"""
 def deleteUser(account):
     result = True
     db = pymysql.connect(
     host= '34.80.39.159',
-    user='chench',
+    user='root',
     database= 'Fiteat')
     cursor = db.cursor()
     sql = "DELETE FROM User WHERE account='" + account + "';"
@@ -78,51 +85,55 @@ def deleteUser(account):
     db.close()
     return result
 
-"""
-input:
-    account(string)
-output:
-    info(tuple): (height,weight,workload,BMI,TDEE),if accunt is not exist return None
-"""
-def searchUser(account):
+def getUserInfo(account):
     db = pymysql.connect(
     host= '34.80.39.159',
-    user='chench',
+    user='root',
     database= 'Fiteat')
     cursor = db.cursor()
     sql = "SELECT * FROM User WHERE account='" + account + "';"
+    print(sql)
     info = None
     try:
         cursor.execute(sql)
         row = cursor.fetchone()
-        info = (row[2],row[3],row[4],row[5],row[6])
+        info = (row[1],row[2],row[3],row[4],row[5])
     except:
         db.rollback()
         print('this account is not exist')
     db.close()
-    return  info
-
-"""
-input: account,password
-output: result(bool): if login sucess return true,otherwise false.
-"""
-def login(account,password):
-    md5_hash = hashlib.md5()
-    md5_hash.update(password.encode())
-    password = md5_hash.hexdigest()
+    return info
+    
+def listUser():
+    macaddr = uuid.UUID(int = uuid.getnode()).hex[-12:]
     db = pymysql.connect(
     host= '34.80.39.159',
-    user='chench',
+    user='root',
     database= 'Fiteat')
     cursor = db.cursor()
-    sql = "Select * FROM User WHERE account='" + account + "';"
+    sql = "SELECT account FROM Machine_user_info WHERE macaddr='" + macaddr + "';"
     cursor.execute(sql)
-    row = cursor.fetchone()
-    if account == row[0] and password == row[1]:
-        return True
-    else:
-        print("login fail, please check!")
-        return False
+    rows = cursor.fetchall()
+    users = []
+    for row in rows:
+        users.append(row[0])
+    return users
 
 if __name__ == "__main__":
-    print("test API")
+    print('test')
+
+#不需要密碼所以好像不需要login了
+# def login(account,password):
+#     db = pymysql.connect(
+#     host= '34.80.39.159',
+#     user='chench',
+#     database= 'Fiteat')
+#     cursor = db.cursor()
+#     sql = "Select * FROM User WHERE account='" + account + "';"
+#     cursor.execute(sql)
+#     row = cursor.fetchone()
+#     if account == row[0] and password == row[1]:
+#         return True
+#     else:
+#         print("login fail, please check!")
+#         return False
