@@ -78,7 +78,6 @@ def deleteUser(account):
     db.close()
     return result
 
-
 """
 input:
     account(string)
@@ -103,5 +102,27 @@ def searchUser(account):
     db.close()
     return  info
 
+"""
+input: account,password
+output: result(bool): if login sucess return true,otherwise false.
+"""
+def login(account,password):
+    md5_hash = hashlib.md5()
+    md5_hash.update(password.encode())
+    password = md5_hash.hexdigest()
+    db = pymysql.connect(
+    host= '34.80.39.159',
+    user='chench',
+    database= 'Fiteat')
+    cursor = db.cursor()
+    sql = "Select * FROM User WHERE account='" + account + "';"
+    cursor.execute(sql)
+    row = cursor.fetchone()
+    if account == row[0] and password == row[1]:
+        return True
+    else:
+        print("login fail, please check!")
+        return False
+
 if __name__ == "__main__":
-    print('start')
+    print("test API")

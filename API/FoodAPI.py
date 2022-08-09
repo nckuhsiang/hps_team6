@@ -1,7 +1,6 @@
 import requests
 import nums_from_string
 
-
 """
 input:
     None
@@ -39,37 +38,55 @@ class Food:
 """
 input:
     name(String): the name of the food that user want to search
+    num(int): the maximum number of searching result, 1 <= num <= 50
 output:
-    foods([Food]): the list of the searching result
+    foods([Food]): 
+        return the list of the searching result
+        if food is not exist return empty list
+        else if error ouccur return None
 """
-def food_search(name):
+def get_foods(name,num):
     url = "https://platform.fatsecret.com/rest/server.api"
     token = get_token()
     options = {
         "method":"foods.search",
         "format":"json",
         "search_expression":name,
-        "max_results": 50
+        "max_results": num
     }
     headers = {
         "Authorization":"Bearer "+ token
     }
-    response = (requests.post(url,data=options, headers=headers).json())["foods"]["food"]
-    # print(response)
+    res = (requests.post(url,data=options, headers=headers).json())["foods"]
     food_list = []
-    for item in response:
-        description = item["food_description"]
-        #remove item that per uint is not g
-        tmp = description.split(" - ")
-        if(tmp[0][-1] != "g"): continue
-        #get food info
-        info = nums_from_string.get_nums(description)
-        food = Food(item["food_name"],info[0],info[1],info[2],info[3],info[4],item["food_url"])
-        food_list.append(food)
+    try:
+        if "food" in res.keys(): #check for the presence of this food that user search
+            if num == 1:
+                items = [res["food"]]
+            else:
+                items = res["food"]
+            for item in items:
+                description = item["food_description"]
+                #remove item that per uint is not g
+                tmp = description.split(" - ")
+                if(tmp[0][-1] != "g"): continue
+                #get food info
+                info = nums_from_string.get_nums(description)
+                food = Food(item["food_name"],info[0],info[1],info[2],info[3],info[4],item["food_url"])
+                food_list.append(food)
+        else:
+            print(name + "is not exist")
+    except:
+        print(res["error"]['message'])
+        return None
+    if(not food_list): #check food_list still have data after filter
+        print(name + "is not exist")  
     return food_list
 
+
 if __name__ == "__main__":
-    name = "apple"
-    foods = food_search(name)
+    name = "chewing gum"
+    foods = get_foods(name,50)
+    print(foods)
     for food in foods:
-        print(food.name,food.calories,food.fat,food.carbs,food.protein)
+        print(food.name,food.per,food.calories,food.fat,food.carbs,food.protein,food.url)
