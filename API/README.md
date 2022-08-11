@@ -38,13 +38,20 @@ User API:
         output:
             result(bool): true,account can be created. otherwise false
 
-    createUser(account,height,weight,workload,BMI,TDEE)
+    createUser(account,machine_id,height,weight,workload,gender,calories,fat,carbs,protein)
         create a user
         input:
             user(tuple):(account,height,weight,workload,gender,calories,fat,carbs,protein)
         output:
             result(bool):create success or fail
-
+    
+    updateMachineID(old_id,new_id)
+        input:
+            old_id(string): the origin machine_id machine use
+            new_id(string): the new machine_id user want to change
+        output:
+            result(bool): sucess or fail
+            
     updateUser(user)
         update user data
         input:

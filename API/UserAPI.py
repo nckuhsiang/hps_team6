@@ -1,5 +1,5 @@
-import uuid
 from dbconnect import conncet
+#import uuid
 #import datetime
 
 # class User:
@@ -23,40 +23,45 @@ def checkAccount(account):
         return False
     return True
 
-def createUser(user):
+def createUser(user): # user = (account,machine_id,height,weight,workload,gender,calories,fat,carbs,protein)
     if not checkAccount(user[0]):
         print("account has already existed!")
         return False
+    result = True
     db = conncet()
     cursor = db.cursor()
-    #create user
-    sql = "INSERT INTO User VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+    sql = "INSERT INTO User VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
     try:
         cursor.execute(sql,user)
         db.commit()
     except:
         db.rollback()
         print('create fail,please check the data')
-        return False
-    
-    #enter user info into machine
-    macaddr = uuid.UUID(int = uuid.getnode()).hex[-12:]
-    sql = "INSERT INTO MachineList (macaddr,account) VALUES (%s,%s);"
-    try:
-        cursor.execute(sql,(macaddr,user[0]))
-        db.commit()
-    except:
-        db.rollback()
-        print("enter fail")
-        return False
+        result = False
     db.close()
-    return True
+    return result
 
-def updateUser(user):
+def updateMachineID(old_id,new_id):
     result = True
     db = conncet()
     cursor = db.cursor()
-    sql = "UPDATE User SET height=%s,weight=%s,workload=%s,gender=%s,calories=%s,fat=%s,carbs=%s,protein=%s WHERE account=%s;"
+    sql = "UPDATE User SET machine_id=%s WHERE machine_id=%s;"
+    try:
+        cursor.execute(sql,(new_id,old_id))
+        db.commit()
+    except:
+        db.rollback()
+        result = False
+        print('update fail,please check the data')
+    db.close()
+    return result
+
+def updateUser(user): #user= (height,weight,workload,gender,calories,fat,carbs,protein,account)
+    result = True
+    db = conncet()
+    cursor = db.cursor()
+    sql = "UPDATE User SET height=%s,weight=%s,workload=%s,gender=%s, \
+        calories=%s,fat=%s,carbs=%s,protein=%s WHERE account=%s;"
     try:
         cursor.execute(sql,user)
         db.commit()
@@ -96,12 +101,11 @@ def getUserInfo(account):
     db.close()
     return info
     
-def listUser():
-    macaddr = uuid.UUID(int = uuid.getnode()).hex[-12:]
+def listUser(machine_id):
     db = conncet()
     cursor = db.cursor()
     sql = "SELECT account FROM MachineList WHERE macaddr= %s;"
-    cursor.execute(sql,(macaddr))
+    cursor.execute(sql,(machine_id))
     rows = cursor.fetchall()
     users = []
     for row in rows:
