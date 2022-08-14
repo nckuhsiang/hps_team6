@@ -1,24 +1,6 @@
-import requests
-import nums_from_string
 from dbconnect import conncet
-
-def get_token():
-    url = "https://oauth.fatsecret.com/connect/token"
-    client_ID = "ac2f660ad05f41a3b9f18b927e74c71f"
-    client_secret = "67eddc79e83c4ea78c9d97d7189fffea"
-    options = {
-        
-        "headers": { 'content-type': 'application/x-www-form-urlencoded'},
-        "grant_type": "client_credentials",
-        "scope":"basic",
-        "json": True
-    }
-    headers = {
-        "content-type": "application/x-www-form-urlencoded",
-    }
-    auth = (client_ID,client_secret)
-    response = requests.post(url, data=options,headers=headers,auth=auth).json()
-    return response["access_token"]
+import socket
+import json
 
 class Food:
     def __init__(self,name,per,calories,fat,carbs,protein,url):
@@ -29,45 +11,32 @@ class Food:
         self.carbs = carbs #unit:g
         self.protein = protein #unit:g
         self.url = url
-        
+
 def get_foods(name,num):
-    url = "https://platform.fatsecret.com/rest/server.api"
-    token = get_token()
-    options = {
-        "method":"foods.search",
-        "format":"json",
-        "search_expression":name,
-        "max_results": num
-    }
-    headers = {
-        "Authorization":"Bearer "+ token
-    }
-    response = requests.post(url,data=options, headers=headers).json()
-    food_list = []
+    # HOST = "127.0.0.1"
+    HOST = "34.81.42.246"
+    PORT = 8001
+    data = {"name":name,"num":num}
+    data = json.dumps(data)
     try:
-        res = response["foods"]
-        if "food" in res.keys(): #check for the presence of this food that user search
-            if num == 1:
-                items = [res["food"]]
-            else:
-                items = res["food"]
-            for item in items:
-                description = item["food_description"]
-                #remove item that per uint is not g
-                tmp = description.split(" - ")
-                if(tmp[0][-1] != "g"): continue
-                #get food info
-                info = nums_from_string.get_nums(description)
-                food = Food(item["food_name"],info[0],info[1],info[2],info[3],info[4],item["food_url"])
-                food_list.append(food)
-        else:
-            print(name + "is not exist")
-    except:
-        print(response["error"]['message'])
-        return None
-    if(not food_list): #check food_list still have data after filter
-        print(name + "is not exist")  
-    return food_list
+    # Connect to server and send data
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.connect((HOST, PORT))
+        client.send(data.encode())
+        foods = []
+        size = int(client.recv(1024).decode())
+        print(size)
+        received = b""
+        while len(received) < size:
+            received += client.recv(1024)
+        received = json.loads(received)
+        if received["message"] == "success":
+            for food in received["foods"]:
+                food = Food(food[0],food[1],food[2],food[3],food[4],food[5],food[6])
+                foods.append(food)
+    finally:
+        client.close()
+    return foods
  
 def get_daily_diet(account):
     db = conncet()
@@ -127,3 +96,16 @@ def save_diet(food,account):
             return False
     db.close()
     return True
+
+
+
+
+
+# if __name__ == "__main__":
+#     foods = get_foods("beef",50)
+#     if foods:
+#         for food in foods:
+#             print(food.name,food.per,food.calories,food.fat,food.carbs,food.protein,food.url)
+#     else:
+#         print("no data")
+   
