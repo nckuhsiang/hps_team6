@@ -25,7 +25,6 @@ def get_foods(name,num):
         client.send(data.encode())
         foods = []
         size = int(client.recv(1024).decode())
-        print(size)
         received = b""
         while len(received) < size:
             received += client.recv(1024)
@@ -101,11 +100,11 @@ def save_diet(food,account):
 
 
 
-# if __name__ == "__main__":
-#     foods = get_foods("beef",50)
-#     if foods:
-#         for food in foods:
-#             print(food.name,food.per,food.calories,food.fat,food.carbs,food.protein,food.url)
-#     else:
-#         print("no data")
+if __name__ == "__main__":
+    foods = get_foods("apple pie",50)
+    if foods:
+        for food in foods:
+            print(food.name,food.per,food.calories,food.fat,food.carbs,food.protein,food.url)
+    else:
+        print("no data")
    
