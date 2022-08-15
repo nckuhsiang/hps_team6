@@ -13,18 +13,18 @@ from dbconnect import conncet
 #         self.carbs = carbs
 #         self.protein = protein
 
-def checkAccount(account):
+def checkAccount(account, machine_id):
     db = conncet()
     cursor = db.cursor()
-    sql = "SELECT account FROM User WHERE account=%s;"
-    cursor.execute(sql,(account))
+    sql = "SELECT account FROM User WHERE account=%s and machine_id= %s;"
+    cursor.execute(sql,(account, machine_id))
     row = cursor.fetchone()
-    if row:
+    if not row:
         return False
     return True
 
 def createUser(user): # user = (account,machine_id,height,weight,workload,gender,calories,fat,carbs,protein)
-    if not checkAccount(user[0]):
+    if checkAccount(user[0], user[1]):
         print("account has already existed!")
         return False
     result = True
@@ -44,7 +44,12 @@ def createUser(user): # user = (account,machine_id,height,weight,workload,gender
 def updateMachineID(old_id,new_id):
     result = True
     db = conncet()
+    sql = "SELECT machine_id FROM User WHERE machine_id = %s;"
     cursor = db.cursor()
+    cursor.execute(sql,(new_id))
+    row = cursor.fetchone()
+    if not row:
+        return False
     sql = "UPDATE User SET machine_id=%s WHERE machine_id=%s;"
     try:
         cursor.execute(sql,(new_id,old_id))
@@ -56,12 +61,12 @@ def updateMachineID(old_id,new_id):
     db.close()
     return result
 
-def updateUser(user): #user= (height,weight,workload,gender,calories,fat,carbs,protein,account)
+def updateUser(user): #user= (new_account_name,height,weight,workload,gender,calories,fat,carbs,protein,account,machine_id)
     result = True
     db = conncet()
     cursor = db.cursor()
-    sql = "UPDATE User SET height=%s,weight=%s,workload=%s,gender=%s, \
-        calories=%s,fat=%s,carbs=%s,protein=%s WHERE account=%s;"
+    sql = "UPDATE User SET account=%s,height=%s,weight=%s,workload=%s,gender=%s, \
+        calories=%s,fat=%s,carbs=%s,protein=%s WHERE account=%s and machine_id= %s;"
     try:
         cursor.execute(sql,user)
         db.commit()
@@ -87,13 +92,13 @@ def deleteUser(account):
     db.close()
     return result
 
-def getUserInfo(account):
+def getUserInfo(account, machine_id):
     db = conncet()
     cursor = db.cursor()
-    sql = "SELECT * FROM User WHERE account='" + account + "';"
+    sql = "SELECT * FROM User WHERE account= %s and machine_id= %s;"
     info = None
     try:
-        cursor.execute(sql)
+        cursor.execute(sql, (account, machine_id))
         info = cursor.fetchone()
     except:
         db.rollback()
@@ -104,7 +109,7 @@ def getUserInfo(account):
 def listUser(machine_id):
     db = conncet()
     cursor = db.cursor()
-    sql = "SELECT account FROM MachineList WHERE macaddr= %s;"
+    sql = "SELECT account FROM User WHERE machine_id= %s;"
     cursor.execute(sql,(machine_id))
     rows = cursor.fetchall()
     users = []
