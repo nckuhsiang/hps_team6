@@ -50,7 +50,7 @@ def request_foods(name,num):
                 if(tmp[0][-1] != "g"): continue
                 #get food info
                 info = nums_from_string.get_nums(description)
-                food = [item["food_name"],info[0],info[1],info[2],info[3],info[4]]
+                food = [item["food_name"],info[0],info[1],info[2],info[3],info[4],item["food_url"]]
                 foods.append(food)
     except:
         result["message"] = response["error"]['message']
@@ -66,6 +66,7 @@ server.listen(5)
 
 while True:
     conn, addr = server.accept()
+    print('connect ip:',addr)
     data = conn.recv(1024)
     data = json.loads(data)
     res = request_foods(data['name'],data["num"])

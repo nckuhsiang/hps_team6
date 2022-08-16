@@ -1,7 +1,8 @@
 from dbconnect import conncet
 import socket
 import json
-
+import requests
+import nums_from_string
 class Food:
     def __init__(self,name,per,calories,fat,carbs,protein,url):
         self.name = name
@@ -11,8 +12,62 @@ class Food:
         self.carbs = carbs #unit:g
         self.protein = protein #unit:g
         self.url = url
-
+def get_token():
+    url = "https://oauth.fatsecret.com/connect/token"
+    client_ID = "ac2f660ad05f41a3b9f18b927e74c71f"
+    client_secret = "67eddc79e83c4ea78c9d97d7189fffea"
+    options = {
+        
+        "headers": { 'content-type': 'application/x-www-form-urlencoded'},
+        "grant_type": "client_credentials",
+        "scope":"basic",
+        "json": True
+    }
+    headers = {
+        "content-type": "application/x-www-form-urlencoded",
+    }
+    auth = (client_ID,client_secret)
+    response = requests.post(url, data=options,headers=headers,auth=auth).json()
+    return response["access_token"]
 def get_foods(name,num):
+    url = "https://platform.fatsecret.com/rest/server.api"
+    token = get_token()
+    options = {
+        "method":"foods.search",
+        "format":"json",
+        "search_expression":name,
+        "max_results": num
+    }
+    headers = {
+        "Authorization":"Bearer "+ token
+    }
+    response = requests.post(url,data=options, headers=headers).json()
+    foods = []
+    try:
+        res = response["foods"]
+        if "food" in res.keys(): #check for the presence of this food that user search
+            if num == 1:
+                items = [res["food"]]
+            else:
+                items = res["food"]
+            for item in items:
+                description = item["food_description"]
+                #remove item that per uint is not g
+                tmp = description.split(" - ")
+                if(tmp[0][-1] != "g"): continue
+                #get food info
+                info = nums_from_string.get_nums(description)
+                food = Food(item["food_name"],info[0],info[1],info[2],info[3],info[4],item["food_url"])
+                foods.append(food)
+    except:
+        print(response["error"]['message']) 
+        return None
+    if(not foods): #check food_list still have data after filter
+        print(name + " is not exist") 
+        return None
+    return foods
+
+def get_foods_v2(name,num):
     # HOST = "127.0.0.1"
     HOST = "34.81.42.246"
     PORT = 8001
@@ -101,7 +156,7 @@ def save_diet(food,account):
 
 
 if __name__ == "__main__":
-    foods = get_foods("apple pie",50)
+    foods = get_foods("cola",50)
     if foods:
         for food in foods:
             print(food.name,food.per,food.calories,food.fat,food.carbs,food.protein,food.url)
