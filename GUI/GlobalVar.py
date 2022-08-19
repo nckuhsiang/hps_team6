@@ -18,6 +18,12 @@ class User():
         self.carbs = info_list[8]
         self.protein = info_list[9]
 
+    def setupDailyDiet(self, daily_info):
+        self.daily_cal = daily_info[0]
+        self.daily_fat = daily_info[1]
+        self.daily_carbs = daily_info[2]
+        self.daily_protein = daily_info[3]
+
 def computeBMI(height, weight):
     if height == 0: return 0
     return round(weight / ((height/100)**2), 2)
@@ -47,22 +53,20 @@ def computeTDEE(height, weight, workload, gender):
         else:                              tdee = 35*std_weight
     return int(tdee)
 
+def computeDiet(cal):
+    fat = int(cal * 0.23 / 9)
+    carbs = int(cal * 0.65 / 4)
+    protein = int(cal * 0.12 / 4)
+    return fat, carbs, protein
+
 id = 0
 user = User()
 user_list = []
-prev_page = ""
-curr_page = "Welcome"
-next_page = ""
+page = ["Welcome"]
 back_flag = False
 create_new_account_flag = False
 
-def setBackPage():
-    global prev_page, next_page, curr_page, back_flag
+def backToLastPage():
+    global page, back_flag
     back_flag = True
-    next_page = prev_page
-
-def moveToNextPage():
-    global prev_page, next_page, curr_page, back_flag, create_new_account_flag
-    back_flag = False
-    create_new_account_flag = False
-    prev_page, curr_page  = curr_page, next_page
+    page.pop()

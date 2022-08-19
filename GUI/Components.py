@@ -1,10 +1,13 @@
-import sys, os
+import sys, os, time
+import cv2
 import GlobalVar as var
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from StyleSheet import style_sheet
+from numpy import ndarray
 import UserAPI
+import BarcodeAPI
 
 app = QApplication(sys.argv)
 app.setStyleSheet(style_sheet)
@@ -107,7 +110,7 @@ class UserNameBtn(QHBoxLayout):
                 for ul in var.user_list:
                     f.write(ul+'\n')
                 f.close()
-        var.next_page = "Menu"
+        var.page.append("Menu")
         change_page.trigger()
 
 class BlackBtn(QPushButton):
@@ -274,3 +277,33 @@ class ProgressCircle(QLabel):
     def setRatio(self, cal, TDEE):
         self.ratio = cal / TDEE
         self.text = str(cal) + ' / ' + str(TDEE)
+
+class CameraThread(QThread):
+    frame_data_updated = pyqtSignal(ndarray)
+    invalid_video_file = pyqtSignal()
+
+    def __init__(self, parent):
+        super().__init__()
+        self.parent = parent
+
+    def run(self):
+        capture = cv2.VideoCapture(0)
+        if not capture.isOpened():
+            self.invalid_video_file.emit()
+        else:
+            while self.parent.thread_is_running:
+                valid, frame = capture.read()
+                if not valid:
+                    break
+                if var.page[-1] == "Scan Package":
+                    frame, food_name = BarcodeAPI.detectBarcode(frame)
+                    if food_name != None: 
+                        print(food_name)
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                self.frame_data_updated.emit(frame)
+                time.sleep(0.03)
+
+    def stopThread(self):
+        """Process all pending events before stopping the thread."""
+        self.wait()
+        QApplication.processEvents()

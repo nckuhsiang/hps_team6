@@ -1,8 +1,12 @@
 from tkinter import W
+from turtle import update
 from Components import *
 from SubWindows import *
 import GlobalVar as var
 import UserAPI
+import FoodAPI
+import BarcodeAPI
+import time
 
 msg_window = MsgWindow()
 
@@ -78,7 +82,7 @@ class WelcomePage(QWidget):
             self.logo_lbl.setPixmap(self.logo_pixmap)
         if self.counter == 120:
             self.timer.stop()
-            var.next_page = "Start"
+            var.page.append("Start")
             change_page.trigger()
 
 class StartPage(QWidget):
@@ -168,10 +172,10 @@ class StartPage(QWidget):
 
     def leavePage(self):
         if self.users_num == 0:
-            var.next_page = "Enter Info"
+            var.page.append("Enter Info")
             var.create_new_account_flag = True
         else:
-            var.next_page = "Sign In"
+            var.page.append("Sign In")
         change_page.trigger()
 
 class SignInPage(QWidget):
@@ -179,7 +183,7 @@ class SignInPage(QWidget):
         super().__init__()
         self.initializeUI()
         self.create_account_btn.clicked.connect(self.jumpToEnterInfoPage)
-        self.cancel_btn.clicked.connect(self.jumpToStartPage)
+        self.cancel_btn.clicked.connect(self.jumpToLastPage)
         self.signin_btn.clicked.connect(self.jumpToMenuPage)
 
     def initializeUI(self):
@@ -227,12 +231,12 @@ class SignInPage(QWidget):
         self.line_edit.setText("")
         
     def jumpToEnterInfoPage(self):
-        var.next_page = "Enter Info"
+        var.page.append("Enter Info")
         var.create_new_account_flag = True
         change_page.trigger()
     
-    def jumpToStartPage(self):
-        var.setBackPage()
+    def jumpToLastPage(self):
+        var.backToLastPage()
         change_page.trigger()
     
     def jumpToMenuPage(self):
@@ -301,19 +305,19 @@ class MenuPage(QWidget):
         self.setLayout(self.layout)
     
     def jumpToScanPkgPage(self):
-        var.next_page = "Scan Package"
+        var.page.append("Scan Package")
         change_page.trigger()
 
     def jumpToDetectFoodPage(self):
-        var.next_page = "Detect Food"
+        var.page.append("Detect Food")
         change_page.trigger()
 
     def jumpToEnterInfoPage(self):
-        var.next_page = "Enter Info"
+        var.page.append("Enter Info")
         change_page.trigger()
 
     def jumpToStartPage(self):
-        var.next_page = "Start"
+        var.page = ["Start"]
         var.back_flag = True
         change_page.trigger()
 
@@ -321,7 +325,13 @@ class ScanPackagePage(QWidget):
     def __init__(self):  
         super().__init__()
         self.initializeUI()
-        self.cancel_btn.clicked.connect(self.jumpToMenuPage)
+        self.camera_thread = CameraThread(self)
+        self.thread_is_running = False
+        
+        self.camera_thread.frame_data_updated.connect(self.updateVideoFrames)
+        self.camera_thread.invalid_video_file.connect(self.invalidVideoFile)
+        self.cancel_btn.clicked.connect(self.jumpToLastPage)
+        self.entry_btn.clicked.connect(self.jumpToEntryPage)
 
     def initializeUI(self):
         self.title = QLabel("Scan\nfood\npackage")
@@ -356,9 +366,34 @@ class ScanPackagePage(QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.layout)
 
-    def jumpToMenuPage(self):
-        var.setBackPage()
+    def jumpToLastPage(self):
+        if self.thread_is_running:
+            self.camera_thread.quit()
+        var.backToLastPage()
         change_page.trigger()
+
+    def jumpToEntryPage(self):
+        if self.thread_is_running:
+            self.camera_thread.quit()
+        var.page.append("Enter Barcode")
+        change_page.trigger()
+
+    def openCamera(self):
+        self.thread_is_running = True
+        self.camera_thread.start()  # Start the thread
+        time.sleep(0.1)
+        self.update()
+
+    def updateVideoFrames(self, video_frame: ndarray):
+        height, width, channels = video_frame.shape
+        bytes_per_line = width * channels
+        converted_img = QImage(video_frame, width, height, bytes_per_line, QImage.Format_RGB888)
+        converted_pixmap = QPixmap.fromImage(converted_img).scaled(self.camara_lbl.width(), self.camara_lbl.height(), Qt.KeepAspectRatioByExpanding)
+        self.camara_lbl.setPixmap(converted_pixmap)
+
+    def invalidVideoFile(self):
+        msg_window.setMsg("camera not found!")
+        msg_window.show()
 
 class DetectFoodPage(ScanPackagePage):
     def __init__(self):  
@@ -380,6 +415,10 @@ class DetectFoodPage(ScanPackagePage):
         self.v_box = QVBoxLayout(self.camara_lbl)
         self.v_box.addLayout(self.h_box)
         self.v_box.addItem(v_expander)
+
+    def jumpToEntryPage(self):
+        var.page.append("Enter Food Name")
+        change_page.trigger()
 
 class EnterInfoPage(ScanPackagePage):
     def __init__(self): 
@@ -485,15 +524,15 @@ class EnterInfoPage(ScanPackagePage):
         self.grid_layout.addLayout(self.tdee_box, 6, 1)
         self.grid_layout.setSpacing(10)
 
-        self.sub_layout_left = QVBoxLayout()
-        self.sub_layout_left.addItem(v_expander)
-        self.sub_layout_left.addLayout(self.grid_layout)
-        self.sub_layout_left.addItem(v_expander)
-        self.sub_layout_left.setContentsMargins(90, 0, 100, 0)
+        self.sub_layout_right = QVBoxLayout()
+        self.sub_layout_right.addItem(v_expander)
+        self.sub_layout_right.addLayout(self.grid_layout)
+        self.sub_layout_right.addItem(v_expander)
+        self.sub_layout_right.setContentsMargins(90, 0, 100, 0)
 
         self.camara_lbl.deleteLater()
         self.entry_btn.setText("Done")
-        self.layout.addLayout(self.sub_layout_left)
+        self.layout.addLayout(self.sub_layout_right)
 
         self.user_name_line_edit.textChanged.connect(self.textName)
         self.height_line_edit.textChanged.connect(self.textHeight)
@@ -534,13 +573,15 @@ class EnterInfoPage(ScanPackagePage):
         self.height_line_edit.setText(str(round(self.height, 1)))
         self.weight_line_edit.setText(str(round(self.weight, 1)))
         self.bmi_number_lbl.setText(str(var.computeBMI(self.height, self.weight)))
-        self.tdee_number_lbl.setText(str(var.computeTDEE(self.height, self.weight, self.workload, self.gender)))
+        self.TDEE = var.computeTDEE(self.height, self.weight, self.workload, self.gender)
+        self.tdee_number_lbl.setText(str(self.TDEE))
         self.update()
 
     def showUserInfo(self):
         self.title.setText("Enter\npersonal\ninfo")
         self.entry_btn.setText("Done")
         self.user_name_line_edit.setText(var.user.name)
+        self.user_name_line_edit.setReadOnly(True)
         self.height_line_edit.setText(str(var.user.height))
         self.weight_line_edit.setText(str(var.user.weight))
         if var.user.gender == 1:
@@ -559,7 +600,7 @@ class EnterInfoPage(ScanPackagePage):
         self.weight = var.user.weight
         self.workload = var.user.workload
         self.gender = var.user.gender
-        var.next_page = "Menu"
+        self.TDEE = var.user.TDEE
 
         try: self.entry_btn.clicked.disconnect() 
         except Exception: pass
@@ -569,6 +610,7 @@ class EnterInfoPage(ScanPackagePage):
         self.title.setText("Create\nnew\naccount")
         self.entry_btn.setText("Create")
         self.user_name_line_edit.setText("")
+        self.user_name_line_edit.setReadOnly(False)
         self.height_line_edit.setText("")
         self.weight_line_edit.setText("")
         self.male_btn.setChecked(True)
@@ -579,7 +621,7 @@ class EnterInfoPage(ScanPackagePage):
         self.weight = 0
         self.workload = "light"
         self.gender = 1
-        var.next_page = "Sign In"
+        self.TDEE = 0
 
         try: self.entry_btn.clicked.disconnect() 
         except Exception: pass
@@ -612,25 +654,23 @@ class EnterInfoPage(ScanPackagePage):
     def updateUserInfo(self):
         if self.checkInfoComplete():
             #user= (new_account_name,height,weight,workload,gender,calories,fat,carbs,protein,account,machine_id)
-            info_list = (self.name, self.height, self.weight, self.workload, self.gender, 0, 0, 0, 0, var.user.name, var.id)
+            fat, carbs, protein = var.computeDiet(self.TDEE)
+            info_list_for_db = (self.height, self.weight, self.workload, self.gender, self.TDEE, fat, carbs, protein, self.name, var.id)
+            info_list = (self.name, var.id, self.height, self.weight, self.workload, self.gender, self.TDEE, fat, carbs, protein)
             print(info_list)
-            if self.name != var.user.name:
-                var.user_list[0] = self.name
-                with open(file_path+'user_list', 'w') as f:
-                    for ul in var.user_list:
-                        f.write(ul+'\n')
-                    f.close()
-            UserAPI.updateUser(info_list)
-            var.back_flag = True
+            UserAPI.updateUser(info_list_for_db)
+            var.user.setupUserInfo(info_list)
+            var.backToLastPage()
             change_page.trigger()
 
     def createNewUser(self):
         if self.checkInfoComplete():
             #user = (account,machine_id,height,weight,workload,gender,calories,fat,carbs,protein)
-            info_list = (self.name, var.id, self.height, self.weight, self.workload, self.gender, 0, 0, 0, 0)
+            fat, carbs, protein = var.computeDiet(self.TDEE)
+            info_list = (self.name, var.id, self.height, self.weight, self.workload, self.gender, self.TDEE, fat, carbs, protein)
             print(info_list)
             if UserAPI.createUser(info_list):
-                var.back_flag = True
+                var.backToLastPage()
                 change_page.trigger()
             else:
                 self.user_name_lbl.setStyleSheet("color: #C00000;")
@@ -652,7 +692,9 @@ class ShowFoodInfoPage(QWidget):
     def __init__(self):  
         super().__init__()
         self.initializeUI()
-        self.weight_line_edit.focus_out.triggered.connect(self.changeCal)
+        self.weight_line_edit.focus_out.triggered.connect(self.weightChange)
+        self.cancel_btn.clicked.connect(self.jumpToLastPage)
+        self.save_btn.clicked.connect(self.jumpToShowUsercalPage)
 
     def initializeUI(self):
         self.food_name_lbl = QLabel("banana")
@@ -703,13 +745,25 @@ class ShowFoodInfoPage(QWidget):
         self.setLayout(self.layout)
         self.setFocusPolicy(Qt.ClickFocus)
 
-    def changeCal(self):
-        print("changeCal")
+    def jumpToLastPage(self):
+        var.backToLastPage()
+        change_page.trigger()
+    
+    def jumpToShowUsercalPage(self):
+        var.page.append("Show Diet")
+        change_page.trigger()
 
-class ShowUserCalPage(QWidget):
+    def setupFoodInfo(self):
+        self.food_name_lbl.setText(var.food_name)
+
+    def weightChange(self):
+        print("weightChange")
+
+class ShowDietPage(QWidget):
     def __init__(self):  
         super().__init__()
         self.initializeUI()
+        self.back_btn.clicked.connect(self.leavePage)
 
     def initializeUI(self):
         self.user_name_lbl = QLabel("AAA")
@@ -751,3 +805,118 @@ class ShowUserCalPage(QWidget):
         self.layout.addLayout(self.layout_left)
         self.layout.addLayout(self.layout_right)
         self.setLayout(self.layout)
+
+    def leavePage(self):
+        var.page = ["Menu"]
+        var.back_flag = True
+        change_page.trigger()
+
+class EnterFoodNamePage(QWidget):
+    def __init__(self):  
+        super().__init__()
+        self.initializeUI()
+        self.line_edit.editingFinished.connect(self.searchFood)
+        self.search_btn.clicked.connect(self.searchFood)
+        self.cancel_btn.clicked.connect(self.leavePage)
+
+    def initializeUI(self):
+        self.title = QLabel("Enter\nfood\nname")
+        self.title.setObjectName("yellow_title")
+        self.title.setAlignment(Qt.AlignCenter)
+
+        self.cancel_btn = YellowBtn("Cancel")
+
+        self.sub_layout_left = QVBoxLayout()
+        self.sub_layout_left.setSpacing(10)
+        self.sub_layout_left.addWidget(self.title)
+        self.sub_layout_left.addItem(v_expander)
+        self.sub_layout_left.addWidget(self.cancel_btn)
+        self.sub_layout_left.setContentsMargins(25, 35, 25, 35)
+
+        self.sub_widget_left = QWidget()
+        self.sub_widget_left.setObjectName("sub_widget")
+        self.sub_widget_left.setMinimumWidth(250)
+        self.sub_widget_left.setLayout(self.sub_layout_left)
+
+        self.text_lbl = QLabel("Food name:")
+        self.text_lbl.setFont(QFont("Agency FB", 27))
+        self.line_edit = QLineEdit()
+        self.search_btn = BlackBtn("Search")
+        self.search_btn.setMinimumWidth(150)
+        self.black_bar = BlackBar()
+        self.black_bar.setMinimumHeight(40)
+
+        self.btn_widget = QWidget()
+        self.btn_layout = QVBoxLayout(self.btn_widget)
+        self.btn_scrollarea = QScrollArea()
+        self.btn_scrollarea.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.btn_scrollarea.setWidget(self.btn_widget)
+        self.btn_scrollarea.setWidgetResizable(True)
+
+        self.search_layout = QHBoxLayout()
+        self.search_layout.setSpacing(15)
+        self.search_layout.addWidget(self.text_lbl)
+        self.search_layout.addWidget(self.line_edit)
+        self.search_layout.addWidget(self.search_btn)
+        self.sub_layout_right = QVBoxLayout()
+        self.sub_layout_right.addLayout(self.search_layout)
+        self.sub_layout_right.addWidget(self.black_bar)
+        self.sub_layout_right.addWidget(self.btn_scrollarea)
+        self.sub_layout_right.setContentsMargins(90, 90, 100, 90)
+
+        self.layout = QHBoxLayout()
+        self.layout.setSpacing(0)
+        self.layout.addWidget(self.sub_widget_left)
+        self.layout.addLayout(self.sub_layout_right)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.layout)
+
+    def searchFood(self):
+        food_name = self.line_edit.text()
+        #food_list = FoodAPI.get_foods(food_name, 10)
+        food_list = ["apple", "banana", "bread"]
+        self.showFoodList(food_list)
+        print(food_list)
+
+    def showFoodList(self, food_list):
+        self.cleanBtnLayout()
+        # add new items into btn_layout
+        for food in food_list:
+            food_btn = BlackBtn(food)
+            food_btn.clicked.connect(self.jumpToShowFoodinfoPage)
+            self.btn_layout.addWidget(food_btn)
+        self.btn_layout.addItem(v_expander)
+
+    def cleanBtnLayout(self):
+        while self.btn_layout.count():
+            child = self.btn_layout.takeAt(0)
+            child_widget = child.widget()
+            if child_widget:
+                child_widget.setParent(None)
+                child_widget.deleteLater()
+
+    def leavePage(self):
+        var.backToLastPage()
+        change_page.trigger()
+
+    def jumpToShowFoodinfoPage(self):
+        var.food_name = self.sender().text()
+        var.page.append("Show Food Info")
+        change_page.trigger()
+
+    def clearLineEdit(self):
+        self.line_edit.setText("")
+        self.cleanBtnLayout()
+
+class EnterBarcodePage(EnterFoodNamePage):
+    def __init__(self):  
+        super().__init__()
+        self.title.setText("Enter\nbarcode")
+        self.text_lbl.setText("Barcode:")
+
+    def searchFood(self):
+        food_id = self.line_edit.text()
+        food_list = BarcodeAPI.getFoodName(food_id)
+        if food_list[0] != "Food not exist":
+            self.showFoodList(food_list)
+            print(food_list)

@@ -12,6 +12,7 @@ class Food:
         self.carbs = carbs #unit:g
         self.protein = protein #unit:g
         self.url = url
+
 def get_token():
     url = "https://oauth.fatsecret.com/connect/token"
     client_ID = "ac2f660ad05f41a3b9f18b927e74c71f"
@@ -29,7 +30,8 @@ def get_token():
     auth = (client_ID,client_secret)
     response = requests.post(url, data=options,headers=headers,auth=auth).json()
     return response["access_token"]
-def get_foods(name,num):
+
+def get_foods(name, num):
     url = "https://platform.fatsecret.com/rest/server.api"
     token = get_token()
     options = {

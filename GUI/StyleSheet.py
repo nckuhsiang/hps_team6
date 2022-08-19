@@ -70,6 +70,9 @@ style_sheet = """
         padding: 3px 10px;
         font: 75 24pt "Agency FB";
     }
+    QLineEdit:read-only {
+        border:0px
+    }
     QWidget#sub_widget{
         background-color: #000000;
     }
