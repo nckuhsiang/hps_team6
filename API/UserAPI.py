@@ -44,6 +44,7 @@ def createUser(user): # user = (account,machine_id,height,weight,workload,gender
 def updateMachineID(old_id,new_id):
     result = True
     db = conncet()
+    #check if new_id exist
     sql = "SELECT machine_id FROM User WHERE machine_id = %s;"
     cursor = db.cursor()
     cursor.execute(sql,(new_id))
