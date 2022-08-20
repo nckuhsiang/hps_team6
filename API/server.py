@@ -20,8 +20,11 @@ def get_token():
     auth = (client_ID,client_secret)
     response = requests.post(url, data=options,headers=headers,auth=auth).json()
     return response["access_token"]
-        
-def request_foods(name,num):
+
+def request_foods(request):
+    request_json = request.get_json()
+    name = request_json['name']
+    num = request_json['num']
     url = "https://platform.fatsecret.com/rest/server.api"
     token = get_token()
     options = {
@@ -35,7 +38,6 @@ def request_foods(name,num):
     }
     response = requests.post(url,data=options, headers=headers).json()
     result = {"foods":[],"message":"success"}
-    foods = []
     try:
         res = response["foods"]
         if "food" in res.keys(): #check for the presence of this food that user search
@@ -50,27 +52,20 @@ def request_foods(name,num):
                 if(tmp[0][-1] != "g"): continue
                 #get food info
                 info = nums_from_string.get_nums(description)
-                food = [item["food_name"],info[0],info[1],info[2],info[3],info[4],item["food_url"]]
-                foods.append(food)
+                food = { 
+                    "name":item["food_name"],
+                    "per":info[0],
+                    "calories":info[1],
+                    "fat":info[2],
+                    "carbs":info[3],
+                    "protein":info[4],
+                    "url":item["food_url"]
+                }
+                result["foods"].append(food)
     except:
-        result["message"] = response["error"]['message']
-    if(not foods): #check food_list still have data after filter
-        result["message"] = name + " is not exist"
-    result["foods"] = foods
-    return result
-
-PORT = 8001
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind(('', PORT))
-server.listen(5)
-
-while True:
-    conn, addr = server.accept()
-    print('connect ip:',addr)
-    data = conn.recv(1024)
-    data = json.loads(data)
-    res = request_foods(data['name'],data["num"])
-    data = json.dumps(res)
-    conn.send(str(len(data)).encode())
-    conn.sendall(data.encode())
-
+        print(response["error"]['message']) 
+        result['message'] = "fail"
+    if(not result): #check food_list still have data after filter
+        print(name + " is not exist") 
+        result['message'] = "fail"
+    return json.dumps(result), 200, {'Content-Type': 'application/json'}
