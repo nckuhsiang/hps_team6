@@ -84,4 +84,29 @@ style_sheet = """
         color: #FFC000;
         font: 75 36pt "Agency FB";
     }
+    QScrollArea {
+        border: none;
+    }
+    QScrollBar
+    {
+        background-color: #000000;
+        width: 22px;
+        margin: 10px, 0px;
+        border: 5px solid #000000;
+        border-radius: 11px;
+    }
+    QScrollBar::handle
+    {
+        background-color: #FFC000;
+        min-height: 5px;
+        border-radius: 6px;
+    }
+    QScrollBar::add-line, QScrollBar::sub-line {
+        border: none;
+        background: none;
+    }
+    QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical
+    {
+        background: none;
+    }
 """
