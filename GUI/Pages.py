@@ -8,8 +8,6 @@ import FoodAPI
 import BarcodeAPI
 import time
 
-msg_window = MsgWindow()
-
 class WelcomePage(QWidget):
     def __init__(self):  
         super().__init__()
@@ -244,7 +242,10 @@ class SignInPage(QWidget):
         if UserAPI.checkAccount(user_name, var.id):
             UserNameBtn(user_name).selectUser()
         else:
-            msg_window.setMsg("The account does not exist!")
+            if user_name == "":
+                msg_window.setMsg("User name cannot be empty!")
+            else:
+                msg_window.setMsg("The account does not exist!")
             msg_window.show()
 
 class MenuPage(QWidget):
