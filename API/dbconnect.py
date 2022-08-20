@@ -2,7 +2,7 @@ import pymysql
 
 def conncet():
     db = pymysql.connect(
-    host= '34.80.39.159',
+    host= '35.194.208.208',
     user='root',
     passwd= 'team6isbest',
     database= 'Fiteat')
