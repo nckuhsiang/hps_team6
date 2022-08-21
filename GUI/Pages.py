@@ -698,8 +698,8 @@ class ShowFoodInfoPage(QWidget):
         self.save_btn.clicked.connect(self.jumpToShowUsercalPage)
 
     def initializeUI(self):
-        self.food_name_lbl = QLabel("banana")
-        self.food_name_lbl.setFont(QFont("Agency FB", 40))
+        self.food_name_lbl = QLabel()
+        self.food_name_lbl.setFont(QFont("Agency FB", 36))
         self.cal_lbl = QLabel("30 Kcal")
         self.cal_lbl.setFont(QFont("Agency FB", 36))
         self.title_box = QHBoxLayout()
@@ -719,7 +719,7 @@ class ShowFoodInfoPage(QWidget):
         self.weight_box.addItem(h_expander)
         self.weight_box.addWidget(self.weight_line_edit)
 
-        self.carb = Nutrition("Carbs")
+        self.carbs = Nutrition("Carbs")
         self.protein = Nutrition("Protein")
         self.fat  = Nutrition("Fat")
         
@@ -737,7 +737,7 @@ class ShowFoodInfoPage(QWidget):
         self.layout.addLayout(self.title_box)
         self.layout.addWidget(self.black_bar)
         self.layout.addLayout(self.weight_box)
-        self.layout.addLayout(self.carb.layout)
+        self.layout.addLayout(self.carbs.layout)
         self.layout.addLayout(self.protein.layout)
         self.layout.addLayout(self.fat.layout)
         self.layout.addLayout(self.btn_box)
@@ -755,10 +755,20 @@ class ShowFoodInfoPage(QWidget):
         change_page.trigger()
 
     def setupFoodInfo(self):
-        self.food_name_lbl.setText(var.food_name)
+        print(var.food.name,var.food.per,var.food.calories,var.food.fat,var.food.carbs,var.food.protein,var.food.url)
+        self.food_name_lbl.setText(var.food.name)
+        self.cal_lbl.setText(str(var.food.calories)+' Kcal')
+        self.fat.setWeight(var.food.fat)
+        self.carbs.setWeight(var.food.carbs)
+        self.protein.setWeight(var.food.protein)
 
     def weightChange(self):
-        print("weightChange")
+        weight = self.weight_line_edit.getWeight()
+        cal = int(var.food.calories * weight / 100)
+        self.cal_lbl.setText(str(cal)+' Kcal')
+        self.fat.setWeight(round(var.food.fat * weight / 100, 2))
+        self.carbs.setWeight(round(var.food.carbs * weight / 100, 2))
+        self.protein.setWeight(round(var.food.protein * weight / 100, 2))
 
 class ShowDietPage(QWidget):
     def __init__(self):  
@@ -873,20 +883,39 @@ class EnterFoodNamePage(QWidget):
         self.setLayout(self.layout)
 
     def searchFood(self):
+        self.btn_scrollarea.setVisible(False)
         food_name = self.line_edit.text()
-        #food_list = FoodAPI.get_foods(food_name, 10)
-        food_list = ["apple", "banana", "bread"]
-        self.showFoodList(food_list)
-        print(food_list)
+        var.food_list = FoodAPI.get_foods(food_name, 30)
+        food_name_list = []
+        for food in var.food_list:
+            if len(food.name) > 70: continue
+            texts = food.name.split()
+            food_name = ''
+            food_name_len = 0
+            for text in texts:
+                if food_name_len + len(text) <= 24:
+                    food_name = food_name+' '+text
+                    food_name_len += len(text)+1
+                else:
+                    food_name = food_name+'\n'+text
+                    food_name_len = len(text)
 
-    def showFoodList(self, food_list):
+            food.name = food_name[1:]
+            if food.name not in food_name_list:
+                food_name_list.append(food.name)
+
+        self.showFoodList(food_name_list)
+
+    def showFoodList(self, food_name_list):
+        self.btn_scrollarea.setVisible(False)
         self.cleanBtnLayout()
         # add new items into btn_layout
-        for food in food_list:
+        for food in food_name_list:
             food_btn = BlackBtn(food)
             food_btn.clicked.connect(self.jumpToShowFoodinfoPage)
             self.btn_layout.addWidget(food_btn)
         self.btn_layout.addItem(v_expander)
+        self.btn_scrollarea.setVisible(True)
 
     def cleanBtnLayout(self):
         while self.btn_layout.count():
@@ -901,9 +930,13 @@ class EnterFoodNamePage(QWidget):
         change_page.trigger()
 
     def jumpToShowFoodinfoPage(self):
-        var.food_name = self.sender().text()
-        var.page.append("Show Food Info")
-        change_page.trigger()
+        selected_food_name = self.sender().text()
+        for food in var.food_list:
+            if food.name == selected_food_name:
+                var.food = food
+                var.page.append("Show Food Info")
+                change_page.trigger()
+                break
 
     def clearLineEdit(self):
         self.line_edit.setText("")

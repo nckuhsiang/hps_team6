@@ -62,6 +62,8 @@ def computeDiet(cal):
 id = 0
 user = User()
 user_list = []
+food_list = []
+food = None
 page = ["Welcome"]
 back_flag = False
 create_new_account_flag = False

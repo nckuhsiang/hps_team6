@@ -208,6 +208,10 @@ class WeightEditLine(QLineEdit):
         self.ready_to_edit = False
         self.clearFocus()
 
+    def getWeight(self):
+        text = self.text()[:-2]
+        return float(text)
+
 class Nutrition():
     def __init__(self, text = "", show_ratio = False):
         self.name_lbl = QLabel(text)

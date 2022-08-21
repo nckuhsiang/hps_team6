@@ -91,10 +91,10 @@ def save_diet(food,account):
     return True
     
 
-# if __name__ == "__main__":
-#     foods = get_foods("cola",50)
-#     if foods:
-#         for food in foods:
-#             print(food.name,food.per,food.calories,food.fat,food.carbs,food.protein,food.url)
-#     else:
-#         print("no data")
+if __name__ == "__main__":
+    foods = get_foods("cola",50)
+    if foods:
+        for food in foods:
+            print(food.name,food.per,food.calories,food.fat,food.carbs,food.protein,food.url)
+    else:
+        print("no data")
