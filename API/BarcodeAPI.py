@@ -4,7 +4,7 @@ from dbconnect import conncet
 def get_food_by_barcode(barcode):
     db = conncet()
     cursor = db.cursor()
-    sql = "SELECT food_name FROM Barcode WHERE id=%s;"
+    sql = "SELECT food_name,weight FROM Barcode WHERE id=%s;"
     cursor.execute(sql,(barcode))
     row = cursor.fetchone()
     if row:
@@ -18,13 +18,13 @@ def get_food_by_barcode(barcode):
     return None
     
 
-def createBarcode(barcode,food_name):
+def createBarcode(barcode,food_name,weight):
     result = True
     db = conncet()
     cursor = db.cursor()
-    sql = "INSERT INTO Barcode VALUES (%s,%s);"
+    sql = "INSERT INTO Barcode VALUES (%s,%s,%s);"
     try:
-        cursor.execute(sql,(barcode,food_name))
+        cursor.execute(sql,(barcode,food_name,weight))
         db.commit()
     except:
         db.rollback()
@@ -49,13 +49,13 @@ def deleteBarcode(barcode):
     return result
 
 
-def updateBarcode(barcode,food_name):
+def updateBarcode(barcode,food_name,weight):
     result = True
     db = conncet()
     cursor = db.cursor()
-    sql = "UPDATE Barcode SET food_name=%s WHERE id=%s;"
+    sql = "UPDATE Barcode SET food_name=%s,weight=%s WHERE id=%s;"
     try:
-        cursor.execute(sql,(food_name,barcode))
+        cursor.execute(sql,(food_name,weight,barcode))
         db.commit()
     except:
         db.rollback()

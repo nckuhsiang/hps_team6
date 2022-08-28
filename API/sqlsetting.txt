@@ -1,0 +1,8 @@
+CREATE EVENT daily_update
+    ON SCHEDULE EVERY 1 DAY
+    DO 
+    DELETE FROM Fiteat.Daily;
+	
+DROP EVENT daily_update;
+
+SHOW EVENTS;

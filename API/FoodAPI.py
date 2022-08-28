@@ -65,7 +65,7 @@ def save_diet(food,account):
     if row: #if data is already in daily
         sql = "UPDATE Daily SET calories=%s,fat=%s,carbs=%s,protein=%s WHERE account=%s;"
         try:
-            cursor.execute(sql,(row[1]-food[1],row[2]-food[2],row[3]-food[3],row[4]-food[4],row[0]))
+            cursor.execute(sql,(row[1]+food[1],row[2]+food[2],row[3]+food[3],row[4]+food[4],row[0]))
             db.commit()
         except:
             print('Update fail')
@@ -78,7 +78,7 @@ def save_diet(food,account):
         if row:
             sql = "INSERT INTO Daily VALUES (%s,%s,%s,%s,%s);"
             try:
-                cursor.execute(sql,(row[0],row[1]-food[1],row[2]-food[2],row[3]-food[3],row[4]-food[4]))
+                cursor.execute(sql,(row[0],food[1],food[2],food[3],food[4]))
                 db.commit()
             except:
                 print('Insert fail')
