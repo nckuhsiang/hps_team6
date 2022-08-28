@@ -69,12 +69,15 @@ class MainWindow(QMainWindow):
             self.show_foodinfo_page.setupFoodInfo()
             self.next_page = self.show_foodinfo_page
         elif var.page[-1] == "Show Diet":
+            self.show_diet_page.setupDiet()
             self.next_page = self.show_diet_page
         elif var.page[-1] == "Enter Food Name":
-            self.enter_food_name.clearLineEdit()
+            if not var.back_flag:
+                self.enter_food_name.clearLineEdit()
             self.next_page = self.enter_food_name
         elif var.page[-1] == "Enter Barcode":
-            self.enter_barcode.clearLineEdit()
+            if not var.back_flag:
+                self.enter_barcode.clearLineEdit()
             self.next_page = self.enter_barcode    
         self.transition_anim.start(self)
 

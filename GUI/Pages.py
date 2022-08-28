@@ -1,5 +1,3 @@
-from tkinter import W
-from turtle import update
 from Components import *
 from SubWindows import *
 import GlobalVar as var
@@ -22,10 +20,10 @@ class WelcomePage(QWidget):
     def initializeUI(self):
         self.title_l = QLabel("FIT")
         self.title_l.setAlignment(Qt.AlignRight)
-        self.title_l.setFont(QFont("Agency FB", 160))
+        self.title_l.setFont(QFont("Agency FB", font_title_size))
         self.title_r = QLabel("EAT")
         self.title_r.setAlignment(Qt.AlignLeft)
-        self.title_r.setFont(QFont("Agency FB", 160))
+        self.title_r.setFont(QFont("Agency FB", font_title_size))
         self.title_l_box = QVBoxLayout()
         self.title_l_box.addItem(v_expander)
         self.title_l_box.addWidget(self.title_l)
@@ -39,7 +37,7 @@ class WelcomePage(QWidget):
         
         self.sub_title = QLabel(" 2022 Google HPS ")
         self.sub_title.setAlignment(Qt.AlignCenter)
-        self.sub_title.setFont(QFont("Agency FB", 40))
+        self.sub_title.setFont(QFont("Agency FB", int(font_title_size*0.25)))
 
         self.black_bar_left = BlackBar()
         self.black_bar_left.setMinimumWidth(70)
@@ -180,6 +178,7 @@ class SignInPage(QWidget):
     def __init__(self):  
         super().__init__()
         self.initializeUI()
+        self.setFocusPolicy(Qt.ClickFocus)
         self.create_account_btn.clicked.connect(self.jumpToEnterInfoPage)
         self.cancel_btn.clicked.connect(self.jumpToLastPage)
         self.signin_btn.clicked.connect(self.jumpToMenuPage)
@@ -187,14 +186,14 @@ class SignInPage(QWidget):
     def initializeUI(self):
         self.title = QLabel("SIGN IN")
         self.title.setAlignment(Qt.AlignCenter)
-        self.title.setFont(QFont("Agency FB", 64))
+        self.title.setFont(QFont("Agency FB", font_subtitle_size))
         self.title.setMinimumHeight(200)
 
         self.user_icon = QPixmap(file_path+"images/person_black.png").scaledToHeight(40)
         self.user_icon_lbl = QLabel()
         self.user_icon_lbl.setPixmap(self.user_icon)
         self.user_name_lbl = QLabel("User Name ")
-        self.user_name_lbl.setFont(QFont("Agency FB", 24))
+        self.user_name_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.line_edit = QLineEdit()
         self.line_edit.setMinimumHeight(70)
         self.create_account_btn = BlackBtn("Create new account", icon="plus_yellow")
@@ -260,7 +259,7 @@ class MenuPage(QWidget):
     def initializeUI(self):
         self.title = QLabel("MENU")
         self.title.setAlignment(Qt.AlignCenter)
-        self.title.setFont(QFont("Agency FB", 64))
+        self.title.setFont(QFont("Agency FB", font_subtitle_size))
         self.title.setMinimumHeight(200)
         self.signout_btn = BlackBtn("Sign out")
 
@@ -403,7 +402,7 @@ class DetectFoodPage(ScanPackagePage):
         self.weight_lbl = QLabel("0.0"+" g ") # TODO: change weight number
         self.weight_lbl.setMinimumWidth(120)
         self.weight_lbl.setAlignment(Qt.AlignCenter | Qt.AlignRight)
-        self.weight_lbl.setFont(QFont("Agency FB", 24))
+        self.weight_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.tare_btn = BlackBtn("TARE")
         self.tare_btn.setMinimumWidth(130)
 
@@ -427,18 +426,18 @@ class EnterInfoPage(ScanPackagePage):
         self.title.setText("")
         self.setFocusPolicy(Qt.ClickFocus)
         self.user_name_lbl = QLabel("User Name  ")
-        self.user_name_lbl.setFont(QFont("Agency FB", 24))
+        self.user_name_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.user_name_line_edit = QLineEdit()
         self.user_name_line_edit.setMaximumHeight(70)
 
         self.height_lbl = QLabel("Height")
-        self.height_lbl.setFont(QFont("Agency FB", 24))
+        self.height_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.height_line_edit = QLineEdit()
         self.height_line_edit.setMaximumHeight(70)
         self.height_line_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.height_line_edit.setValidator(QRegExpValidator(QRegExp("^(([0-9]+\.[0-9]*[1-9][0-9]*)|([0-9]*[1-9][0-9]*\.[0-9]+)|([0-9]*[1-9][0-9]*))$")))
         self.height_unit_lbl = QLabel("cm ")
-        self.height_unit_lbl.setFont(QFont("Agency FB", 24))
+        self.height_unit_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.height_unit_lbl.setAlignment(Qt.AlignCenter | Qt.AlignRight)
         self.height_unit_lbl.setMinimumWidth(50) 
         self.height_box = QHBoxLayout()
@@ -446,13 +445,13 @@ class EnterInfoPage(ScanPackagePage):
         self.height_box.addWidget(self.height_unit_lbl)
 
         self.weight_lbl = QLabel("Weight")
-        self.weight_lbl.setFont(QFont("Agency FB", 24))
+        self.weight_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.weight_line_edit = QLineEdit()
         self.weight_line_edit.setMaximumHeight(70)
         self.weight_line_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.weight_line_edit.setValidator(QRegExpValidator(QRegExp("^(([0-9]+\.[0-9]*[1-9][0-9]*)|([0-9]*[1-9][0-9]*\.[0-9]+)|([0-9]*[1-9][0-9]*))$")))
         self.weight_unit_lbl = QLabel("kg ")
-        self.weight_unit_lbl.setFont(QFont("Agency FB", 24))
+        self.weight_unit_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.weight_unit_lbl.setAlignment(Qt.AlignCenter | Qt.AlignRight)
         self.weight_unit_lbl.setMinimumWidth(50) 
         self.weight_box = QHBoxLayout()
@@ -460,7 +459,7 @@ class EnterInfoPage(ScanPackagePage):
         self.weight_box.addWidget(self.weight_unit_lbl)
         
         self.gender_lbl = QLabel("Gender")
-        self.gender_lbl.setFont(QFont("Agency FB", 24))
+        self.gender_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.gender_btn_group = QButtonGroup()
         self.gender_btn_group.setExclusive(True)
         self.male_btn = CheckBtn("male")
@@ -473,7 +472,7 @@ class EnterInfoPage(ScanPackagePage):
         self.gender_box.addWidget(self.female_btn)
 
         self.workload_lbl = QLabel("Workload")
-        self.workload_lbl.setFont(QFont("Agency FB", 24))
+        self.workload_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.workload_btn_group = QButtonGroup()
         self.workload_btn_group.setExclusive(True)
         self.light_btn = CheckBtn("light")
@@ -490,18 +489,17 @@ class EnterInfoPage(ScanPackagePage):
 
         self.bmi_lbl = QLabel("BMI")
         self.bmi_lbl.setMinimumHeight(60)
-        self.bmi_lbl.setFont(QFont("Agency FB", 24))
+        self.bmi_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.bmi_number_lbl = QLabel("0")
-        self.bmi_number_lbl.setFont(QFont("Agency FB", 24))
+        self.bmi_number_lbl.setFont(QFont("Agency FB", font_normal_size))
 
         self.tdee_lbl = QLabel("TDEE")
         self.tdee_lbl.setMinimumHeight(60)
-        self.tdee_lbl.setFont(QFont("Agency FB", 24))
+        self.tdee_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.tdee_number_lbl = QLabel("0")
-        self.tdee_number_lbl.setFont(QFont("Agency FB", 24))
+        self.tdee_number_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.tdee_unit_lbl = QLabel("Kcal/day")
-        self.tdee_unit_lbl.setFont(QFont("Agency FB", 24))
-
+        self.tdee_unit_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.tdee_box = QHBoxLayout()
         self.tdee_box.addWidget(self.tdee_number_lbl)
         self.tdee_box.addItem(h_expander)
@@ -679,29 +677,20 @@ class EnterInfoPage(ScanPackagePage):
                 msg_window.setMsg("Account has already existed!")
                 msg_window.show()
 
-class EnterBarcodePage(QWidget):
-    def __init__(self):  
-        super().__init__()
-        self.initializeUI()
-
-    def initializeUI(self):
-        self.text_lbl = QLabel("Enter barcode: ")
-        self.text_lbl.setFont(QFont("Agency FB", 24))
-        self.line_edit = QLineEdit()
-
 class ShowFoodInfoPage(QWidget):
     def __init__(self):  
         super().__init__()
         self.initializeUI()
+        self.setFocusPolicy(Qt.ClickFocus)
         self.weight_line_edit.focus_out.triggered.connect(self.weightChange)
         self.cancel_btn.clicked.connect(self.jumpToLastPage)
         self.save_btn.clicked.connect(self.jumpToShowUsercalPage)
 
     def initializeUI(self):
         self.food_name_lbl = QLabel()
-        self.food_name_lbl.setFont(QFont("Agency FB", 36))
+        self.food_name_lbl.setFont(QFont("Agency FB", int(font_normal_size*1.5)))
         self.cal_lbl = QLabel("30 Kcal")
-        self.cal_lbl.setFont(QFont("Agency FB", 36))
+        self.cal_lbl.setFont(QFont("Agency FB", int(font_normal_size*1.5)))
         self.title_box = QHBoxLayout()
         self.title_box.addWidget(self.food_name_lbl)
         self.title_box.addItem(h_expander)
@@ -711,7 +700,7 @@ class ShowFoodInfoPage(QWidget):
         self.black_bar.setMinimumHeight(25)
 
         self.weight_lbl = QLabel("Weight")
-        self.weight_lbl.setFont(QFont("Agency FB", 24))
+        self.weight_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.weight_lbl.setMinimumHeight(55)
         self.weight_line_edit = WeightEditLine("100.0 g")       
         self.weight_box = QHBoxLayout()
@@ -744,13 +733,16 @@ class ShowFoodInfoPage(QWidget):
         self.layout.addItem(v_expander)
         self.layout.setContentsMargins(170, 20, 170, 0)
         self.setLayout(self.layout)
-        self.setFocusPolicy(Qt.ClickFocus)
 
     def jumpToLastPage(self):
         var.backToLastPage()
         change_page.trigger()
     
     def jumpToShowUsercalPage(self):
+        var.food.calories = int(self.cal_lbl.text().split()[0])
+        var.food.fat = self.fat.value
+        var.food.carbs = self.carbs.value
+        var.food.protein = self.protein.value
         var.page.append("Show Diet")
         change_page.trigger()
 
@@ -778,13 +770,13 @@ class ShowDietPage(QWidget):
 
     def initializeUI(self):
         self.user_name_lbl = QLabel("AAA")
-        self.user_name_lbl.setFont(QFont("Agency FB", 40))
+        self.user_name_lbl.setFont(QFont("Agency FB", int(font_normal_size*1.5)))
         
         self.black_bar = BlackBar()
         self.black_bar.setMinimumHeight(25)
 
         self.calories = Nutrition("Calories", show_ratio=True)
-        self.carb = Nutrition("Carbs", show_ratio=True)
+        self.carbs = Nutrition("Carbs", show_ratio=True)
         self.protein = Nutrition("Protein", show_ratio=True)
         self.fat  = Nutrition("Fat", show_ratio=True)
 
@@ -794,7 +786,7 @@ class ShowDietPage(QWidget):
         self.layout_left.addWidget(self.user_name_lbl)
         self.layout_left.addWidget(self.black_bar)
         self.layout_left.addLayout(self.calories.layout)
-        self.layout_left.addLayout(self.carb.layout)
+        self.layout_left.addLayout(self.carbs.layout)
         self.layout_left.addLayout(self.protein.layout)
         self.layout_left.addLayout(self.fat.layout)
         self.layout_left.addItem(v_expander)
@@ -816,16 +808,30 @@ class ShowDietPage(QWidget):
         self.layout.addLayout(self.layout_left)
         self.layout.addLayout(self.layout_right)
         self.setLayout(self.layout)
+    
+    def setupDiet(self):
+        self.user_name_lbl.setText(var.user.name)
+        self.calories.setBaseWeight(int(var.user.cal))
+        self.carbs.setBaseWeight(int(var.user.carbs))
+        self.fat.setBaseWeight(int(var.user.fat))
+        self.protein.setBaseWeight(int(var.user.protein))
+
+        calories, fat, carbs, protein = FoodAPI.save_diet(var.food, var.user.name, var.id)
+        self.calories.setWeight(int(calories))
+        self.carbs.setWeight(int(carbs))
+        self.fat.setWeight(int(fat))
+        self.protein.setWeight(int(protein))
+        self.progress_circle.setRatio(calories, var.user.cal)
 
     def leavePage(self):
         var.page = ["Menu"]
-        var.back_flag = True
         change_page.trigger()
 
 class EnterFoodNamePage(QWidget):
     def __init__(self):  
         super().__init__()
         self.initializeUI()
+        self.setFocusPolicy(Qt.ClickFocus)
         self.line_edit.editingFinished.connect(self.searchFood)
         self.search_btn.clicked.connect(self.searchFood)
         self.cancel_btn.clicked.connect(self.leavePage)
@@ -850,7 +856,7 @@ class EnterFoodNamePage(QWidget):
         self.sub_widget_left.setLayout(self.sub_layout_left)
 
         self.text_lbl = QLabel("Food name:")
-        self.text_lbl.setFont(QFont("Agency FB", 27))
+        self.text_lbl.setFont(QFont("Agency FB", font_normal_size+3))
         self.line_edit = QLineEdit()
         self.search_btn = BlackBtn("Search")
         self.search_btn.setMinimumWidth(150)

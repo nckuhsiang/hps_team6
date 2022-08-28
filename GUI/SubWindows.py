@@ -8,7 +8,7 @@ class MsgWindow(QWidget):
         self.setWindowTitle("Error Message")
         self.setStyleSheet("background-color: #000000;")
         self.msg_lbl = QLabel("")
-        self.msg_lbl.setFont(QFont("Agency FB", 24))
+        self.msg_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.msg_lbl.setStyleSheet("color: #FFC000;")
 
         self.layout = self.title_box = QHBoxLayout()
@@ -28,7 +28,7 @@ class IDWindow(QWidget):
         super().__init__()
         self.setWindowTitle("Enter your old machine ID")
         self.id_lbl = QLabel(" ID: ")
-        self.id_lbl.setFont(QFont("Agency FB", 24))
+        self.id_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.id_lineEdit = QLineEdit(var.id)
         self.id_lineEdit.returnPressed.connect(self.changeID)
         self.id_lineEdit.textChanged.connect(self.checkTextFormat)
