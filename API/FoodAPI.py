@@ -31,75 +31,54 @@ def get_foods(name,num):
         return []
     return foods
 
-def get_daily_diet(account):
+def get_daily_diet(account, machine_id):
     db = conncet()
     cursor = db.cursor()
-    sql = "SELECT account,calories,fat,carbs,protein FROM Daily WHERE account=%s"
-    cursor.execute(sql,(account))
+    sql = "SELECT calories,fat,carbs,protein FROM Daily WHERE account=%s and machine_id= %s;"
+    cursor.execute(sql,(account, machine_id))
     row = cursor.fetchone()
     if row:
         return row
-    sql = "SELECT account,calories,fat,carbs,protein FROM User WHERE account=%s"
-    cursor.execute(sql,(account))
-    row = cursor.fetchone()
-    if not row:
-        print("account doesn't exist")
-        return None
-    sql = "INSERT INTO Daily VALUES (%s,%s,%s,%s,%s);"
-    try:
-        cursor.execute(sql,row)
-        db.commit()
-    except:
-        print('Insert fail')
-        db.rollback()
-        return None
-    db.close()
-    return (row[1],row[2],row[3],row[4])
+    else:
+        return (0, 0, 0, 0)
 
-def save_diet(food,account):
+def save_diet(food: Food, account, machine_id):
     db = conncet()
     cursor = db.cursor()
-    sql = "SELECT * FROM Daily WHERE account=%s;"
-    cursor.execute(sql,(account))
-    row = cursor.fetchone() #(account,calories,fat,carbs,protein)
+    sql = "SELECT calories,fat,carbs,protein FROM Daily WHERE account=%s and machine_id= %s;"
+    cursor.execute(sql,(account, machine_id))
+    row = cursor.fetchone()
+    calories, fat, carbs, protein = food.calories, food.fat, food.carbs, food.protein
+
     if row: #if data is already in daily
-        sql = "UPDATE Daily SET calories=%s,fat=%s,carbs=%s,protein=%s WHERE account=%s;"
+        sql = "UPDATE Daily SET calories=%s,fat=%s,carbs=%s,protein=%s WHERE account=%s and machine_id= %s;"
+        calories, fat, carbs, protein = row[0]+food.calories, row[1]+food.fat, row[2]+food.carbs, row[3]+food.protein
         try:
-            cursor.execute(sql,(row[1]+food[1],row[2]+food[2],row[3]+food[3],row[4]+food[4],row[0]))
+
+            cursor.execute(sql,(calories, fat, carbs, protein, account, machine_id)
             db.commit()
         except:
             print('Update fail')
             db.rollback()
-            return False
+            return (0, 0, 0, 0)
+    
     else: #data is not in daily
-        sql = "SELECT account,calories,fat,carbs,protein FROM User WHERE account=%s;"
-        cursor.execute(sql,(account))
-        row = cursor.fetchone()
-        if row:
-            sql = "INSERT INTO Daily VALUES (%s,%s,%s,%s,%s);"
-            try:
-                cursor.execute(sql,(row[0],food[1],food[2],food[3],food[4]))
-                db.commit()
-            except:
-                print('Insert fail')
-                db.rollback()
-                return False
-        else:
-            print("account doesn't exist")
-            return False
+        sql = "INSERT INTO Daily VALUES (%s,%s,%s,%s,%s,%s);"
+        try:
+            cursor.execute(sql,(account, machine_id, calories, fat, carbs, protein))
+            db.commit()
+        except:
+            print('Insert fail')
+            db.rollback()
+            return (0, 0, 0, 0)
     db.close()
-    return True
-
-
+    return (calories, fat, carbs, protein)
     
 
-
-
-# if __name__ == "__main__":
-#     foods = get_foods("cola",50)
-#     if foods:
-#         for food in foods:
-#             print(food.name,food.per,food.calories,food.fat,food.carbs,food.protein,food.url)
-#     else:
-#         print("no data")
-   
+if __name__ == "__main__":
+    foods = get_foods("cola",50)
+    if foods:
+        for food in foods:
+            print(food.name,food.per,food.calories,food.fat,food.carbs,food.protein,food.url)
+    else:
+        print("no data")

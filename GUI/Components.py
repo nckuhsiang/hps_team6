@@ -1,17 +1,24 @@
-import sys, os
+import sys, os, time
+import cv2
 import GlobalVar as var
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from StyleSheet import style_sheet
+from numpy import ndarray
 import UserAPI
+import BarcodeAPI
 
 app = QApplication(sys.argv)
 app.setStyleSheet(style_sheet)
 file_path = str(os.path.dirname(os.path.abspath(__file__))+'/')
 h_expander = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 v_expander = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-change_page = QAction()
+change_page = QAction(None)
+
+font_title_size = 160
+font_subtitle_size = 64
+font_normal_size = 24
 
 def initIcon():
     global person_black, person_red, person_yellow, close_black, close_red, plus_yellow
@@ -44,7 +51,7 @@ class BlackBar(QLabel):
 class NameBtn(QPushButton):
     def __init__(self):
         super().__init__()
-        self.setFont(QFont("Agency FB", 24))
+        self.setFont(QFont("Agency FB", font_normal_size))
         self.setIcon(person_black)
         self.setIconSize(QSize(32, 32))
         self.setMinimumWidth(350)
@@ -107,14 +114,14 @@ class UserNameBtn(QHBoxLayout):
                 for ul in var.user_list:
                     f.write(ul+'\n')
                 f.close()
-        var.next_page = "Menu"
+        var.page.append("Menu")
         change_page.trigger()
 
 class BlackBtn(QPushButton):
     def __init__(self, text = "", icon = ""):
         super().__init__()
         self.setText(text)
-        self.setFont(QFont("Agency FB", 24))
+        self.setFont(QFont("Agency FB", font_normal_size))
         self.setIconSize(QSize(32, 32))
         if icon == "person_yellow":
             self.setIcon(person_yellow)
@@ -125,13 +132,13 @@ class YellowBtn(QPushButton):
     def __init__(self, text = ""):
         super().__init__()
         self.setText(text)
-        self.setFont(QFont("Agency FB", 24))
+        self.setFont(QFont("Agency FB", font_normal_size))
 
 class CheckBtn(QPushButton):
     def __init__(self, text = ""):
         super().__init__()
         self.setText(text)
-        self.setFont(QFont("Agency FB", 24))
+        self.setFont(QFont("Agency FB", font_normal_size))
         self.setCheckable(True)
         self.setMaximumHeight(65)
         self.setMinimumHeight(65)
@@ -140,7 +147,7 @@ class MenuItem():
     def __init__(self):
         self.name_lbl = QLabel()
         self.name_lbl.setAlignment(Qt.AlignCenter)
-        self.name_lbl.setFont(QFont("Agency FB", 24))
+        self.name_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.image_btn = QToolButton()
         self.image_btn.setStyleSheet("border-radius: 30px;")
         self.image_btn.setMaximumSize(160, 160)
@@ -183,7 +190,7 @@ class WeightEditLine(QLineEdit):
         self.returnPressed.connect(self.finishEdit)
         self.setMaximumWidth(200)
         self.ready_to_edit = False
-        self.focus_out = QAction()
+        self.focus_out = QAction(None)
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
@@ -205,18 +212,23 @@ class WeightEditLine(QLineEdit):
         self.ready_to_edit = False
         self.clearFocus()
 
+    def getWeight(self):
+        text = self.text()[:-2]
+        return float(text)
+
 class Nutrition():
     def __init__(self, text = "", show_ratio = False):
         self.name_lbl = QLabel(text)
-        self.name_lbl.setFont(QFont("Agency FB", 24))
+        self.name_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.name_lbl.setMinimumHeight(55)
         self.num_lbl = QLabel()
-        self.num_lbl.setFont(QFont("Agency FB", 24))
+        self.num_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.show_ratio = show_ratio
         if self.show_ratio:
             self.num_lbl.setText("10 / 100")
         else:
             self.num_lbl.setText("10 g  ")
+        self.value = 10
 
         h_expender = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.layout = QHBoxLayout()
@@ -230,10 +242,15 @@ class Nutrition():
         self.num_lbl.setText(str(frac+' / '+denom))
 
     def setWeight(self, weight):
+        self.value = weight
         if self.show_ratio:
             frac, denom = self.num_lbl.text().split(" / ")
             frac = str(weight)
             self.num_lbl.setText(str(frac+' / '+denom))
+            if float(frac) > float(denom):
+                self.num_lbl.setStyleSheet("color:  #C00000;")
+            else:
+                self.num_lbl.setStyleSheet("color:  #000000;")
         else:
             self.num_lbl.setText(str(weight)+' g  ')
 
@@ -250,6 +267,7 @@ class ProgressCircle(QLabel):
         super().paintEvent(event)
         self.drawPath()
         self.painter = QPainter(self)
+        self.painter.setRenderHint(QPainter.Antialiasing)
         if self.ratio > 1:
             self.painter.setPen(QPen(QColor(192, 0, 0), 3))
             self.painter.fillPath(self.path, QColor(192, 0, 0))
@@ -258,7 +276,7 @@ class ProgressCircle(QLabel):
             self.painter.fillPath(self.path, Qt.black)
         self.painter.drawEllipse(self.r1)
         self.painter.drawEllipse(self.r2)
-        self.painter.setFont(QFont("Agency FB", 30))
+        self.painter.setFont(QFont("Agency FB", font_normal_size+5))
         self.painter.drawText(QRectF(0, 0, self.width(), self.height()), Qt.AlignCenter, self.text)
         self.painter.end()
     
@@ -266,11 +284,41 @@ class ProgressCircle(QLabel):
         self.r1 = QRectF(self.width()/2-self.length*0.5, self.height()/2-self.length*0.5, self.length, self.length)
         self.r2 = QRectF(self.width()/2-self.length*0.35, self.height()/2-self.length*0.35, self.length*0.7, self.length*0.7)
         self.ang = self.ratio * 360 if self.ratio < 1 else 360 
-        self.path.clear()
+        self.path = QPainterPath()
         self.path.moveTo(QPointF(self.width()/2, self.height()/2-self.length*0.5))
         self.path.arcTo(self.r1, 90, -self.ang)
         self.path.arcTo(self.r2, 90-self.ang, self.ang)
 
     def setRatio(self, cal, TDEE):
         self.ratio = cal / TDEE
-        self.text = str(cal) + ' / ' + str(TDEE)
+        self.text = str(int(cal)) + ' / ' + str(int(TDEE))
+
+class CameraThread(QThread):
+    frame_data_updated = pyqtSignal(ndarray)
+    invalid_video_file = pyqtSignal()
+
+    def __init__(self, parent):
+        super().__init__()
+        self.parent = parent
+
+    def run(self):
+        capture = cv2.VideoCapture(0)
+        if not capture.isOpened():
+            self.invalid_video_file.emit()
+        else:
+            while self.parent.thread_is_running:
+                valid, frame = capture.read()
+                if not valid:
+                    break
+                if var.page[-1] == "Scan Package":
+                    frame, food_name = BarcodeAPI.detectBarcode(frame)
+                    if food_name != None: 
+                        print(food_name)
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                self.frame_data_updated.emit(frame)
+                time.sleep(0.03)
+
+    def stopThread(self):
+        """Process all pending events before stopping the thread."""
+        self.wait()
+        QApplication.processEvents()

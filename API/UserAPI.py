@@ -62,11 +62,11 @@ def updateMachineID(old_id,new_id):
     db.close()
     return result
 
-def updateUser(user): #user= (new_account_name,height,weight,workload,gender,calories,fat,carbs,protein,account,machine_id)
+def updateUser(user): #user= (height,weight,workload,gender,calories,fat,carbs,protein,account,machine_id)
     result = True
     db = conncet()
     cursor = db.cursor()
-    sql = "UPDATE User SET account=%s,height=%s,weight=%s,workload=%s,gender=%s, \
+    sql = "UPDATE User SET height=%s,weight=%s,workload=%s,gender=%s, \
         calories=%s,fat=%s,carbs=%s,protein=%s WHERE account=%s and machine_id= %s;"
     try:
         cursor.execute(sql,user)

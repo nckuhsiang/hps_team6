@@ -70,6 +70,9 @@ style_sheet = """
         padding: 3px 10px;
         font: 75 24pt "Agency FB";
     }
+    QLineEdit:read-only {
+        border:0px
+    }
     QWidget#sub_widget{
         background-color: #000000;
     }
@@ -80,5 +83,30 @@ style_sheet = """
     QLabel#yellow_title{
         color: #FFC000;
         font: 75 36pt "Agency FB";
+    }
+    QScrollArea {
+        border: none;
+    }
+    QScrollBar
+    {
+        background-color: #000000;
+        width: 22px;
+        margin: 10px, 0px;
+        border: 5px solid #000000;
+        border-radius: 11px;
+    }
+    QScrollBar::handle
+    {
+        background-color: #FFC000;
+        min-height: 5px;
+        border-radius: 6px;
+    }
+    QScrollBar::add-line, QScrollBar::sub-line {
+        border: none;
+        background: none;
+    }
+    QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical
+    {
+        background: none;
     }
 """

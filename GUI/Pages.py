@@ -1,10 +1,10 @@
-from tkinter import W
 from Components import *
 from SubWindows import *
 import GlobalVar as var
 import UserAPI
-
-msg_window = MsgWindow()
+import FoodAPI
+import BarcodeAPI
+import time
 
 class WelcomePage(QWidget):
     def __init__(self):  
@@ -20,10 +20,10 @@ class WelcomePage(QWidget):
     def initializeUI(self):
         self.title_l = QLabel("FIT")
         self.title_l.setAlignment(Qt.AlignRight)
-        self.title_l.setFont(QFont("Agency FB", 160))
+        self.title_l.setFont(QFont("Agency FB", font_title_size))
         self.title_r = QLabel("EAT")
         self.title_r.setAlignment(Qt.AlignLeft)
-        self.title_r.setFont(QFont("Agency FB", 160))
+        self.title_r.setFont(QFont("Agency FB", font_title_size))
         self.title_l_box = QVBoxLayout()
         self.title_l_box.addItem(v_expander)
         self.title_l_box.addWidget(self.title_l)
@@ -37,7 +37,7 @@ class WelcomePage(QWidget):
         
         self.sub_title = QLabel(" 2022 Google HPS ")
         self.sub_title.setAlignment(Qt.AlignCenter)
-        self.sub_title.setFont(QFont("Agency FB", 40))
+        self.sub_title.setFont(QFont("Agency FB", int(font_title_size*0.25)))
 
         self.black_bar_left = BlackBar()
         self.black_bar_left.setMinimumWidth(70)
@@ -78,7 +78,7 @@ class WelcomePage(QWidget):
             self.logo_lbl.setPixmap(self.logo_pixmap)
         if self.counter == 120:
             self.timer.stop()
-            var.next_page = "Start"
+            var.page.append("Start")
             change_page.trigger()
 
 class StartPage(QWidget):
@@ -168,31 +168,32 @@ class StartPage(QWidget):
 
     def leavePage(self):
         if self.users_num == 0:
-            var.next_page = "Enter Info"
+            var.page.append("Enter Info")
             var.create_new_account_flag = True
         else:
-            var.next_page = "Sign In"
+            var.page.append("Sign In")
         change_page.trigger()
 
 class SignInPage(QWidget):
     def __init__(self):  
         super().__init__()
         self.initializeUI()
+        self.setFocusPolicy(Qt.ClickFocus)
         self.create_account_btn.clicked.connect(self.jumpToEnterInfoPage)
-        self.cancel_btn.clicked.connect(self.jumpToStartPage)
+        self.cancel_btn.clicked.connect(self.jumpToLastPage)
         self.signin_btn.clicked.connect(self.jumpToMenuPage)
 
     def initializeUI(self):
         self.title = QLabel("SIGN IN")
         self.title.setAlignment(Qt.AlignCenter)
-        self.title.setFont(QFont("Agency FB", 64))
+        self.title.setFont(QFont("Agency FB", font_subtitle_size))
         self.title.setMinimumHeight(200)
 
         self.user_icon = QPixmap(file_path+"images/person_black.png").scaledToHeight(40)
         self.user_icon_lbl = QLabel()
         self.user_icon_lbl.setPixmap(self.user_icon)
         self.user_name_lbl = QLabel("User Name ")
-        self.user_name_lbl.setFont(QFont("Agency FB", 24))
+        self.user_name_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.line_edit = QLineEdit()
         self.line_edit.setMinimumHeight(70)
         self.create_account_btn = BlackBtn("Create new account", icon="plus_yellow")
@@ -227,12 +228,12 @@ class SignInPage(QWidget):
         self.line_edit.setText("")
         
     def jumpToEnterInfoPage(self):
-        var.next_page = "Enter Info"
+        var.page.append("Enter Info")
         var.create_new_account_flag = True
         change_page.trigger()
     
-    def jumpToStartPage(self):
-        var.setBackPage()
+    def jumpToLastPage(self):
+        var.backToLastPage()
         change_page.trigger()
     
     def jumpToMenuPage(self):
@@ -240,7 +241,10 @@ class SignInPage(QWidget):
         if UserAPI.checkAccount(user_name, var.id):
             UserNameBtn(user_name).selectUser()
         else:
-            msg_window.setMsg("The account does not exist!")
+            if user_name == "":
+                msg_window.setMsg("User name cannot be empty!")
+            else:
+                msg_window.setMsg("The account does not exist!")
             msg_window.show()
 
 class MenuPage(QWidget):
@@ -255,7 +259,7 @@ class MenuPage(QWidget):
     def initializeUI(self):
         self.title = QLabel("MENU")
         self.title.setAlignment(Qt.AlignCenter)
-        self.title.setFont(QFont("Agency FB", 64))
+        self.title.setFont(QFont("Agency FB", font_subtitle_size))
         self.title.setMinimumHeight(200)
         self.signout_btn = BlackBtn("Sign out")
 
@@ -301,19 +305,19 @@ class MenuPage(QWidget):
         self.setLayout(self.layout)
     
     def jumpToScanPkgPage(self):
-        var.next_page = "Scan Package"
+        var.page.append("Scan Package")
         change_page.trigger()
 
     def jumpToDetectFoodPage(self):
-        var.next_page = "Detect Food"
+        var.page.append("Detect Food")
         change_page.trigger()
 
     def jumpToEnterInfoPage(self):
-        var.next_page = "Enter Info"
+        var.page.append("Enter Info")
         change_page.trigger()
 
     def jumpToStartPage(self):
-        var.next_page = "Start"
+        var.page = ["Start"]
         var.back_flag = True
         change_page.trigger()
 
@@ -321,7 +325,13 @@ class ScanPackagePage(QWidget):
     def __init__(self):  
         super().__init__()
         self.initializeUI()
-        self.cancel_btn.clicked.connect(self.jumpToMenuPage)
+        self.camera_thread = CameraThread(self)
+        self.thread_is_running = False
+        
+        self.camera_thread.frame_data_updated.connect(self.updateVideoFrames)
+        self.camera_thread.invalid_video_file.connect(self.invalidVideoFile)
+        self.cancel_btn.clicked.connect(self.jumpToLastPage)
+        self.entry_btn.clicked.connect(self.jumpToEntryPage)
 
     def initializeUI(self):
         self.title = QLabel("Scan\nfood\npackage")
@@ -356,9 +366,34 @@ class ScanPackagePage(QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.layout)
 
-    def jumpToMenuPage(self):
-        var.setBackPage()
+    def jumpToLastPage(self):
+        if self.thread_is_running:
+            self.camera_thread.quit()
+        var.backToLastPage()
         change_page.trigger()
+
+    def jumpToEntryPage(self):
+        if self.thread_is_running:
+            self.camera_thread.quit()
+        var.page.append("Enter Barcode")
+        change_page.trigger()
+
+    def openCamera(self):
+        self.thread_is_running = True
+        self.camera_thread.start()  # Start the thread
+        time.sleep(0.1)
+        self.update()
+
+    def updateVideoFrames(self, video_frame: ndarray):
+        height, width, channels = video_frame.shape
+        bytes_per_line = width * channels
+        converted_img = QImage(video_frame, width, height, bytes_per_line, QImage.Format_RGB888)
+        converted_pixmap = QPixmap.fromImage(converted_img).scaled(self.camara_lbl.width(), self.camara_lbl.height(), Qt.KeepAspectRatioByExpanding)
+        self.camara_lbl.setPixmap(converted_pixmap)
+
+    def invalidVideoFile(self):
+        msg_window.setMsg("camera not found!")
+        msg_window.show()
 
 class DetectFoodPage(ScanPackagePage):
     def __init__(self):  
@@ -367,7 +402,7 @@ class DetectFoodPage(ScanPackagePage):
         self.weight_lbl = QLabel("0.0"+" g ") # TODO: change weight number
         self.weight_lbl.setMinimumWidth(120)
         self.weight_lbl.setAlignment(Qt.AlignCenter | Qt.AlignRight)
-        self.weight_lbl.setFont(QFont("Agency FB", 24))
+        self.weight_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.tare_btn = BlackBtn("TARE")
         self.tare_btn.setMinimumWidth(130)
 
@@ -381,24 +416,28 @@ class DetectFoodPage(ScanPackagePage):
         self.v_box.addLayout(self.h_box)
         self.v_box.addItem(v_expander)
 
+    def jumpToEntryPage(self):
+        var.page.append("Enter Food Name")
+        change_page.trigger()
+
 class EnterInfoPage(ScanPackagePage):
     def __init__(self): 
         super().__init__()
         self.title.setText("")
         self.setFocusPolicy(Qt.ClickFocus)
         self.user_name_lbl = QLabel("User Name  ")
-        self.user_name_lbl.setFont(QFont("Agency FB", 24))
+        self.user_name_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.user_name_line_edit = QLineEdit()
         self.user_name_line_edit.setMaximumHeight(70)
 
         self.height_lbl = QLabel("Height")
-        self.height_lbl.setFont(QFont("Agency FB", 24))
+        self.height_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.height_line_edit = QLineEdit()
         self.height_line_edit.setMaximumHeight(70)
         self.height_line_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.height_line_edit.setValidator(QRegExpValidator(QRegExp("^(([0-9]+\.[0-9]*[1-9][0-9]*)|([0-9]*[1-9][0-9]*\.[0-9]+)|([0-9]*[1-9][0-9]*))$")))
         self.height_unit_lbl = QLabel("cm ")
-        self.height_unit_lbl.setFont(QFont("Agency FB", 24))
+        self.height_unit_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.height_unit_lbl.setAlignment(Qt.AlignCenter | Qt.AlignRight)
         self.height_unit_lbl.setMinimumWidth(50) 
         self.height_box = QHBoxLayout()
@@ -406,13 +445,13 @@ class EnterInfoPage(ScanPackagePage):
         self.height_box.addWidget(self.height_unit_lbl)
 
         self.weight_lbl = QLabel("Weight")
-        self.weight_lbl.setFont(QFont("Agency FB", 24))
+        self.weight_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.weight_line_edit = QLineEdit()
         self.weight_line_edit.setMaximumHeight(70)
         self.weight_line_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.weight_line_edit.setValidator(QRegExpValidator(QRegExp("^(([0-9]+\.[0-9]*[1-9][0-9]*)|([0-9]*[1-9][0-9]*\.[0-9]+)|([0-9]*[1-9][0-9]*))$")))
         self.weight_unit_lbl = QLabel("kg ")
-        self.weight_unit_lbl.setFont(QFont("Agency FB", 24))
+        self.weight_unit_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.weight_unit_lbl.setAlignment(Qt.AlignCenter | Qt.AlignRight)
         self.weight_unit_lbl.setMinimumWidth(50) 
         self.weight_box = QHBoxLayout()
@@ -420,7 +459,7 @@ class EnterInfoPage(ScanPackagePage):
         self.weight_box.addWidget(self.weight_unit_lbl)
         
         self.gender_lbl = QLabel("Gender")
-        self.gender_lbl.setFont(QFont("Agency FB", 24))
+        self.gender_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.gender_btn_group = QButtonGroup()
         self.gender_btn_group.setExclusive(True)
         self.male_btn = CheckBtn("male")
@@ -433,7 +472,7 @@ class EnterInfoPage(ScanPackagePage):
         self.gender_box.addWidget(self.female_btn)
 
         self.workload_lbl = QLabel("Workload")
-        self.workload_lbl.setFont(QFont("Agency FB", 24))
+        self.workload_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.workload_btn_group = QButtonGroup()
         self.workload_btn_group.setExclusive(True)
         self.light_btn = CheckBtn("light")
@@ -450,18 +489,17 @@ class EnterInfoPage(ScanPackagePage):
 
         self.bmi_lbl = QLabel("BMI")
         self.bmi_lbl.setMinimumHeight(60)
-        self.bmi_lbl.setFont(QFont("Agency FB", 24))
+        self.bmi_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.bmi_number_lbl = QLabel("0")
-        self.bmi_number_lbl.setFont(QFont("Agency FB", 24))
+        self.bmi_number_lbl.setFont(QFont("Agency FB", font_normal_size))
 
         self.tdee_lbl = QLabel("TDEE")
         self.tdee_lbl.setMinimumHeight(60)
-        self.tdee_lbl.setFont(QFont("Agency FB", 24))
+        self.tdee_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.tdee_number_lbl = QLabel("0")
-        self.tdee_number_lbl.setFont(QFont("Agency FB", 24))
+        self.tdee_number_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.tdee_unit_lbl = QLabel("Kcal/day")
-        self.tdee_unit_lbl.setFont(QFont("Agency FB", 24))
-
+        self.tdee_unit_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.tdee_box = QHBoxLayout()
         self.tdee_box.addWidget(self.tdee_number_lbl)
         self.tdee_box.addItem(h_expander)
@@ -485,15 +523,15 @@ class EnterInfoPage(ScanPackagePage):
         self.grid_layout.addLayout(self.tdee_box, 6, 1)
         self.grid_layout.setSpacing(10)
 
-        self.sub_layout_left = QVBoxLayout()
-        self.sub_layout_left.addItem(v_expander)
-        self.sub_layout_left.addLayout(self.grid_layout)
-        self.sub_layout_left.addItem(v_expander)
-        self.sub_layout_left.setContentsMargins(90, 0, 100, 0)
+        self.sub_layout_right = QVBoxLayout()
+        self.sub_layout_right.addItem(v_expander)
+        self.sub_layout_right.addLayout(self.grid_layout)
+        self.sub_layout_right.addItem(v_expander)
+        self.sub_layout_right.setContentsMargins(90, 0, 100, 0)
 
         self.camara_lbl.deleteLater()
         self.entry_btn.setText("Done")
-        self.layout.addLayout(self.sub_layout_left)
+        self.layout.addLayout(self.sub_layout_right)
 
         self.user_name_line_edit.textChanged.connect(self.textName)
         self.height_line_edit.textChanged.connect(self.textHeight)
@@ -534,13 +572,15 @@ class EnterInfoPage(ScanPackagePage):
         self.height_line_edit.setText(str(round(self.height, 1)))
         self.weight_line_edit.setText(str(round(self.weight, 1)))
         self.bmi_number_lbl.setText(str(var.computeBMI(self.height, self.weight)))
-        self.tdee_number_lbl.setText(str(var.computeTDEE(self.height, self.weight, self.workload, self.gender)))
+        self.TDEE = var.computeTDEE(self.height, self.weight, self.workload, self.gender)
+        self.tdee_number_lbl.setText(str(self.TDEE))
         self.update()
 
     def showUserInfo(self):
         self.title.setText("Enter\npersonal\ninfo")
         self.entry_btn.setText("Done")
         self.user_name_line_edit.setText(var.user.name)
+        self.user_name_line_edit.setReadOnly(True)
         self.height_line_edit.setText(str(var.user.height))
         self.weight_line_edit.setText(str(var.user.weight))
         if var.user.gender == 1:
@@ -559,7 +599,7 @@ class EnterInfoPage(ScanPackagePage):
         self.weight = var.user.weight
         self.workload = var.user.workload
         self.gender = var.user.gender
-        var.next_page = "Menu"
+        self.TDEE = var.user.TDEE
 
         try: self.entry_btn.clicked.disconnect() 
         except Exception: pass
@@ -569,6 +609,7 @@ class EnterInfoPage(ScanPackagePage):
         self.title.setText("Create\nnew\naccount")
         self.entry_btn.setText("Create")
         self.user_name_line_edit.setText("")
+        self.user_name_line_edit.setReadOnly(False)
         self.height_line_edit.setText("")
         self.weight_line_edit.setText("")
         self.male_btn.setChecked(True)
@@ -579,7 +620,7 @@ class EnterInfoPage(ScanPackagePage):
         self.weight = 0
         self.workload = "light"
         self.gender = 1
-        var.next_page = "Sign In"
+        self.TDEE = 0
 
         try: self.entry_btn.clicked.disconnect() 
         except Exception: pass
@@ -612,25 +653,23 @@ class EnterInfoPage(ScanPackagePage):
     def updateUserInfo(self):
         if self.checkInfoComplete():
             #user= (new_account_name,height,weight,workload,gender,calories,fat,carbs,protein,account,machine_id)
-            info_list = (self.name, self.height, self.weight, self.workload, self.gender, 0, 0, 0, 0, var.user.name, var.id)
+            fat, carbs, protein = var.computeDiet(self.TDEE)
+            info_list_for_db = (self.height, self.weight, self.workload, self.gender, self.TDEE, fat, carbs, protein, self.name, var.id)
+            info_list = (self.name, var.id, self.height, self.weight, self.workload, self.gender, self.TDEE, fat, carbs, protein)
             print(info_list)
-            if self.name != var.user.name:
-                var.user_list[0] = self.name
-                with open(file_path+'user_list', 'w') as f:
-                    for ul in var.user_list:
-                        f.write(ul+'\n')
-                    f.close()
-            UserAPI.updateUser(info_list)
-            var.back_flag = True
+            UserAPI.updateUser(info_list_for_db)
+            var.user.setupUserInfo(info_list)
+            var.backToLastPage()
             change_page.trigger()
 
     def createNewUser(self):
         if self.checkInfoComplete():
             #user = (account,machine_id,height,weight,workload,gender,calories,fat,carbs,protein)
-            info_list = (self.name, var.id, self.height, self.weight, self.workload, self.gender, 0, 0, 0, 0)
+            fat, carbs, protein = var.computeDiet(self.TDEE)
+            info_list = (self.name, var.id, self.height, self.weight, self.workload, self.gender, self.TDEE, fat, carbs, protein)
             print(info_list)
             if UserAPI.createUser(info_list):
-                var.back_flag = True
+                var.backToLastPage()
                 change_page.trigger()
             else:
                 self.user_name_lbl.setStyleSheet("color: #C00000;")
@@ -638,27 +677,20 @@ class EnterInfoPage(ScanPackagePage):
                 msg_window.setMsg("Account has already existed!")
                 msg_window.show()
 
-class EnterBarcodePage(QWidget):
-    def __init__(self):  
-        super().__init__()
-        self.initializeUI()
-
-    def initializeUI(self):
-        self.text_lbl = QLabel("Enter barcode: ")
-        self.text_lbl.setFont(QFont("Agency FB", 24))
-        self.line_edit = QLineEdit()
-
 class ShowFoodInfoPage(QWidget):
     def __init__(self):  
         super().__init__()
         self.initializeUI()
-        self.weight_line_edit.focus_out.triggered.connect(self.changeCal)
+        self.setFocusPolicy(Qt.ClickFocus)
+        self.weight_line_edit.focus_out.triggered.connect(self.weightChange)
+        self.cancel_btn.clicked.connect(self.jumpToLastPage)
+        self.save_btn.clicked.connect(self.jumpToShowUsercalPage)
 
     def initializeUI(self):
-        self.food_name_lbl = QLabel("banana")
-        self.food_name_lbl.setFont(QFont("Agency FB", 40))
+        self.food_name_lbl = QLabel()
+        self.food_name_lbl.setFont(QFont("Agency FB", int(font_normal_size*1.5)))
         self.cal_lbl = QLabel("30 Kcal")
-        self.cal_lbl.setFont(QFont("Agency FB", 36))
+        self.cal_lbl.setFont(QFont("Agency FB", int(font_normal_size*1.5)))
         self.title_box = QHBoxLayout()
         self.title_box.addWidget(self.food_name_lbl)
         self.title_box.addItem(h_expander)
@@ -668,7 +700,7 @@ class ShowFoodInfoPage(QWidget):
         self.black_bar.setMinimumHeight(25)
 
         self.weight_lbl = QLabel("Weight")
-        self.weight_lbl.setFont(QFont("Agency FB", 24))
+        self.weight_lbl.setFont(QFont("Agency FB", font_normal_size))
         self.weight_lbl.setMinimumHeight(55)
         self.weight_line_edit = WeightEditLine("100.0 g")       
         self.weight_box = QHBoxLayout()
@@ -676,7 +708,7 @@ class ShowFoodInfoPage(QWidget):
         self.weight_box.addItem(h_expander)
         self.weight_box.addWidget(self.weight_line_edit)
 
-        self.carb = Nutrition("Carbs")
+        self.carbs = Nutrition("Carbs")
         self.protein = Nutrition("Protein")
         self.fat  = Nutrition("Fat")
         
@@ -694,32 +726,57 @@ class ShowFoodInfoPage(QWidget):
         self.layout.addLayout(self.title_box)
         self.layout.addWidget(self.black_bar)
         self.layout.addLayout(self.weight_box)
-        self.layout.addLayout(self.carb.layout)
+        self.layout.addLayout(self.carbs.layout)
         self.layout.addLayout(self.protein.layout)
         self.layout.addLayout(self.fat.layout)
         self.layout.addLayout(self.btn_box)
         self.layout.addItem(v_expander)
         self.layout.setContentsMargins(170, 20, 170, 0)
         self.setLayout(self.layout)
-        self.setFocusPolicy(Qt.ClickFocus)
 
-    def changeCal(self):
-        print("changeCal")
+    def jumpToLastPage(self):
+        var.backToLastPage()
+        change_page.trigger()
+    
+    def jumpToShowUsercalPage(self):
+        var.food.calories = int(self.cal_lbl.text().split()[0])
+        var.food.fat = self.fat.value
+        var.food.carbs = self.carbs.value
+        var.food.protein = self.protein.value
+        var.page.append("Show Diet")
+        change_page.trigger()
 
-class ShowUserCalPage(QWidget):
+    def setupFoodInfo(self):
+        print(var.food.name,var.food.per,var.food.calories,var.food.fat,var.food.carbs,var.food.protein,var.food.url)
+        self.food_name_lbl.setText(var.food.name)
+        self.cal_lbl.setText(str(var.food.calories)+' Kcal')
+        self.fat.setWeight(var.food.fat)
+        self.carbs.setWeight(var.food.carbs)
+        self.protein.setWeight(var.food.protein)
+
+    def weightChange(self):
+        weight = self.weight_line_edit.getWeight()
+        cal = int(var.food.calories * weight / 100)
+        self.cal_lbl.setText(str(cal)+' Kcal')
+        self.fat.setWeight(round(var.food.fat * weight / 100, 2))
+        self.carbs.setWeight(round(var.food.carbs * weight / 100, 2))
+        self.protein.setWeight(round(var.food.protein * weight / 100, 2))
+
+class ShowDietPage(QWidget):
     def __init__(self):  
         super().__init__()
         self.initializeUI()
+        self.back_btn.clicked.connect(self.leavePage)
 
     def initializeUI(self):
         self.user_name_lbl = QLabel("AAA")
-        self.user_name_lbl.setFont(QFont("Agency FB", 40))
+        self.user_name_lbl.setFont(QFont("Agency FB", int(font_normal_size*1.5)))
         
         self.black_bar = BlackBar()
         self.black_bar.setMinimumHeight(25)
 
         self.calories = Nutrition("Calories", show_ratio=True)
-        self.carb = Nutrition("Carbs", show_ratio=True)
+        self.carbs = Nutrition("Carbs", show_ratio=True)
         self.protein = Nutrition("Protein", show_ratio=True)
         self.fat  = Nutrition("Fat", show_ratio=True)
 
@@ -729,7 +786,7 @@ class ShowUserCalPage(QWidget):
         self.layout_left.addWidget(self.user_name_lbl)
         self.layout_left.addWidget(self.black_bar)
         self.layout_left.addLayout(self.calories.layout)
-        self.layout_left.addLayout(self.carb.layout)
+        self.layout_left.addLayout(self.carbs.layout)
         self.layout_left.addLayout(self.protein.layout)
         self.layout_left.addLayout(self.fat.layout)
         self.layout_left.addItem(v_expander)
@@ -751,3 +808,155 @@ class ShowUserCalPage(QWidget):
         self.layout.addLayout(self.layout_left)
         self.layout.addLayout(self.layout_right)
         self.setLayout(self.layout)
+    
+    def setupDiet(self):
+        self.user_name_lbl.setText(var.user.name)
+        self.calories.setBaseWeight(int(var.user.cal))
+        self.carbs.setBaseWeight(int(var.user.carbs))
+        self.fat.setBaseWeight(int(var.user.fat))
+        self.protein.setBaseWeight(int(var.user.protein))
+
+        calories, fat, carbs, protein = FoodAPI.save_diet(var.food, var.user.name, var.id)
+        self.calories.setWeight(int(calories))
+        self.carbs.setWeight(int(carbs))
+        self.fat.setWeight(int(fat))
+        self.protein.setWeight(int(protein))
+        self.progress_circle.setRatio(calories, var.user.cal)
+
+    def leavePage(self):
+        var.page = ["Menu"]
+        change_page.trigger()
+
+class EnterFoodNamePage(QWidget):
+    def __init__(self):  
+        super().__init__()
+        self.initializeUI()
+        self.setFocusPolicy(Qt.ClickFocus)
+        self.line_edit.editingFinished.connect(self.searchFood)
+        self.search_btn.clicked.connect(self.searchFood)
+        self.cancel_btn.clicked.connect(self.leavePage)
+
+    def initializeUI(self):
+        self.title = QLabel("Enter\nfood\nname")
+        self.title.setObjectName("yellow_title")
+        self.title.setAlignment(Qt.AlignCenter)
+
+        self.cancel_btn = YellowBtn("Cancel")
+
+        self.sub_layout_left = QVBoxLayout()
+        self.sub_layout_left.setSpacing(10)
+        self.sub_layout_left.addWidget(self.title)
+        self.sub_layout_left.addItem(v_expander)
+        self.sub_layout_left.addWidget(self.cancel_btn)
+        self.sub_layout_left.setContentsMargins(25, 35, 25, 35)
+
+        self.sub_widget_left = QWidget()
+        self.sub_widget_left.setObjectName("sub_widget")
+        self.sub_widget_left.setMinimumWidth(250)
+        self.sub_widget_left.setLayout(self.sub_layout_left)
+
+        self.text_lbl = QLabel("Food name:")
+        self.text_lbl.setFont(QFont("Agency FB", font_normal_size+3))
+        self.line_edit = QLineEdit()
+        self.search_btn = BlackBtn("Search")
+        self.search_btn.setMinimumWidth(150)
+        self.black_bar = BlackBar()
+        self.black_bar.setMinimumHeight(40)
+
+        self.btn_widget = QWidget()
+        self.btn_layout = QVBoxLayout(self.btn_widget)
+        self.btn_scrollarea = QScrollArea()
+        self.btn_scrollarea.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.btn_scrollarea.setWidget(self.btn_widget)
+        self.btn_scrollarea.setWidgetResizable(True)
+
+        self.search_layout = QHBoxLayout()
+        self.search_layout.setSpacing(15)
+        self.search_layout.addWidget(self.text_lbl)
+        self.search_layout.addWidget(self.line_edit)
+        self.search_layout.addWidget(self.search_btn)
+        self.sub_layout_right = QVBoxLayout()
+        self.sub_layout_right.addLayout(self.search_layout)
+        self.sub_layout_right.addWidget(self.black_bar)
+        self.sub_layout_right.addWidget(self.btn_scrollarea)
+        self.sub_layout_right.setContentsMargins(90, 90, 100, 90)
+
+        self.layout = QHBoxLayout()
+        self.layout.setSpacing(0)
+        self.layout.addWidget(self.sub_widget_left)
+        self.layout.addLayout(self.sub_layout_right)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.layout)
+
+    def searchFood(self):
+        self.btn_scrollarea.setVisible(False)
+        food_name = self.line_edit.text()
+        var.food_list = FoodAPI.get_foods(food_name, 30)
+        food_name_list = []
+        for food in var.food_list:
+            if len(food.name) > 70: continue
+            texts = food.name.split()
+            food_name = ''
+            food_name_len = 0
+            for text in texts:
+                if food_name_len + len(text) <= 24:
+                    food_name = food_name+' '+text
+                    food_name_len += len(text)+1
+                else:
+                    food_name = food_name+'\n'+text
+                    food_name_len = len(text)
+
+            food.name = food_name[1:]
+            if food.name not in food_name_list:
+                food_name_list.append(food.name)
+
+        self.showFoodList(food_name_list)
+
+    def showFoodList(self, food_name_list):
+        self.btn_scrollarea.setVisible(False)
+        self.cleanBtnLayout()
+        # add new items into btn_layout
+        for food in food_name_list:
+            food_btn = BlackBtn(food)
+            food_btn.clicked.connect(self.jumpToShowFoodinfoPage)
+            self.btn_layout.addWidget(food_btn)
+        self.btn_layout.addItem(v_expander)
+        self.btn_scrollarea.setVisible(True)
+
+    def cleanBtnLayout(self):
+        while self.btn_layout.count():
+            child = self.btn_layout.takeAt(0)
+            child_widget = child.widget()
+            if child_widget:
+                child_widget.setParent(None)
+                child_widget.deleteLater()
+
+    def leavePage(self):
+        var.backToLastPage()
+        change_page.trigger()
+
+    def jumpToShowFoodinfoPage(self):
+        selected_food_name = self.sender().text()
+        for food in var.food_list:
+            if food.name == selected_food_name:
+                var.food = food
+                var.page.append("Show Food Info")
+                change_page.trigger()
+                break
+
+    def clearLineEdit(self):
+        self.line_edit.setText("")
+        self.cleanBtnLayout()
+
+class EnterBarcodePage(EnterFoodNamePage):
+    def __init__(self):  
+        super().__init__()
+        self.title.setText("Enter\nbarcode")
+        self.text_lbl.setText("Barcode:")
+
+    def searchFood(self):
+        food_id = self.line_edit.text()
+        food_list = BarcodeAPI.getFoodName(food_id)
+        if food_list[0] != "Food not exist":
+            self.showFoodList(food_list)
+            print(food_list)
