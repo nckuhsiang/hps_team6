@@ -1,17 +1,5 @@
 from dbconnect import conncet
-#import uuid
-#import datetime
 
-# class User:
-#     def __init__(self,account,height,weight,workload,gender,calories,fat,carbs,protein):
-#         self.account = account
-#         self.height = height
-#         self.weight = weight
-#         self.gender = gender
-#         self.calories = calories
-#         self.fat = fat
-#         self.carbs = carbs
-#         self.protein = protein
 
 def checkAccount(account, machine_id):
     db = conncet()
@@ -30,7 +18,8 @@ def createUser(user): # user = (account,machine_id,height,weight,workload,gender
     result = True
     db = conncet()
     cursor = db.cursor()
-    sql = "INSERT INTO User VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+    sql = "INSERT INTO User (account,machine_id,height,weight,workload,gender,calories,fat,carbs,protein) \
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
     try:
         cursor.execute(sql,user)
         db.commit()
@@ -78,13 +67,13 @@ def updateUser(user): #user= (height,weight,workload,gender,calories,fat,carbs,p
     db.close()
     return result
     
-def deleteUser(account):
+def deleteUser(account,machine_id):
     result = True
     db = conncet()
     cursor = db.cursor()
-    sql = "DELETE FROM User WHERE account=%s;"
+    sql = "DELETE FROM User WHERE account=%s and machine_id=%s;"
     try:
-        cursor.execute(sql,(account))
+        cursor.execute(sql,(account,machine_id))
         db.commit()
     except:
         db.rollback()
