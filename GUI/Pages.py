@@ -194,7 +194,7 @@ class SignInPage(QWidget):
         self.user_icon_lbl.setPixmap(self.user_icon)
         self.user_name_lbl = QLabel("User Name ")
         self.user_name_lbl.setFont(QFont("Agency FB", font_normal_size))
-        self.line_edit = QLineEdit()
+        self.line_edit = LineEdit()
         self.line_edit.setMinimumHeight(70)
         self.create_account_btn = BlackBtn("Create new account", icon="plus_yellow")
         self.cancel_btn = BlackBtn("Cancel")
@@ -318,7 +318,6 @@ class MenuPage(QWidget):
 
     def jumpToStartPage(self):
         var.page = ["Start"]
-        var.back_flag = True
         change_page.trigger()
 
 class ScanPackagePage(QWidget):
@@ -427,12 +426,12 @@ class EnterInfoPage(ScanPackagePage):
         self.setFocusPolicy(Qt.ClickFocus)
         self.user_name_lbl = QLabel("User Name  ")
         self.user_name_lbl.setFont(QFont("Agency FB", font_normal_size))
-        self.user_name_line_edit = QLineEdit()
+        self.user_name_line_edit = LineEdit()
         self.user_name_line_edit.setMaximumHeight(70)
 
         self.height_lbl = QLabel("Height")
         self.height_lbl.setFont(QFont("Agency FB", font_normal_size))
-        self.height_line_edit = QLineEdit()
+        self.height_line_edit = LineEdit()
         self.height_line_edit.setMaximumHeight(70)
         self.height_line_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.height_line_edit.setValidator(QRegExpValidator(QRegExp("^(([0-9]+\.[0-9]*[1-9][0-9]*)|([0-9]*[1-9][0-9]*\.[0-9]+)|([0-9]*[1-9][0-9]*))$")))
@@ -446,7 +445,7 @@ class EnterInfoPage(ScanPackagePage):
 
         self.weight_lbl = QLabel("Weight")
         self.weight_lbl.setFont(QFont("Agency FB", font_normal_size))
-        self.weight_line_edit = QLineEdit()
+        self.weight_line_edit = LineEdit()
         self.weight_line_edit.setMaximumHeight(70)
         self.weight_line_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.weight_line_edit.setValidator(QRegExpValidator(QRegExp("^(([0-9]+\.[0-9]*[1-9][0-9]*)|([0-9]*[1-9][0-9]*\.[0-9]+)|([0-9]*[1-9][0-9]*))$")))
@@ -857,7 +856,7 @@ class EnterFoodNamePage(QWidget):
 
         self.text_lbl = QLabel("Food name:")
         self.text_lbl.setFont(QFont("Agency FB", font_normal_size+3))
-        self.line_edit = QLineEdit()
+        self.line_edit = LineEdit()
         self.search_btn = BlackBtn("Search")
         self.search_btn.setMinimumWidth(150)
         self.black_bar = BlackBar()

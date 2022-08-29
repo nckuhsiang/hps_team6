@@ -179,7 +179,16 @@ class MenuItem():
         self.name_lbl.setStyleSheet("color: #000000;")
         self.image_btn.setIcon(self.icon)
 
-class WeightEditLine(QLineEdit):
+class LineEdit(QLineEdit):
+    def __init__(self):
+        super().__init__()
+    def focusInEvent(self, event):
+        super().focusInEvent(event)
+        print('onboard')
+    def focusOutEvent(self, event):
+        super().focusOutEvent(event)
+
+class WeightEditLine(LineEdit):
     def __init__(self, text = ""):
         super().__init__()
         self.setText(text)
