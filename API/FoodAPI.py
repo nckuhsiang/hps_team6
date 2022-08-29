@@ -1,3 +1,4 @@
+from turtle import update
 from dbconnect import conncet
 import json
 import requests
@@ -51,10 +52,11 @@ def save_diet(food: Food, account, machine_id):
     calories, fat, carbs, protein = food.calories, food.fat, food.carbs, food.protein
 
     if row: #if data is already in daily
-        sql = "UPDATE Daily SET calories=%s,fat=%s,carbs=%s,protein=%s WHERE account=%s and machine_id= %s;"
+        sql = "UPDATE Daily SET calories=%s,fat=%s,carbs=%s,protein=%s WHERE account=%s and machine_id=%s;"
         calories, fat, carbs, protein = row[0]+food.calories, row[1]+food.fat, row[2]+food.carbs, row[3]+food.protein
         try:
-            cursor.execute(sql,calories, fat, carbs, protein, account, machine_id)
+            print(calories,fat,carbs,protein,account,machine_id)
+            cursor.execute(sql,(calories, fat, carbs, protein, account, machine_id))
             db.commit()
         except:
             print('Update fail')
@@ -62,7 +64,7 @@ def save_diet(food: Food, account, machine_id):
             return (0, 0, 0, 0)
     
     else: #data is not in daily
-        sql = "INSERT INTO Daily VALUES (%s,%s,%s,%s,%s,%s);"
+        sql = "INSERT INTO Daily (account,machine_id,calories,fat,carbs,protein) VALUES (%s,%s,%s,%s,%s,%s);"
         try:
             cursor.execute(sql,(account, machine_id, calories, fat, carbs, protein))
             db.commit()
@@ -75,9 +77,11 @@ def save_diet(food: Food, account, machine_id):
     
 
 if __name__ == "__main__":
-    foods = get_foods("cola",50)
-    if foods:
-        for food in foods:
-            print(food.name,food.per,food.calories,food.fat,food.carbs,food.protein,food.url)
-    else:
-        print("no data")
+    # foods = get_foods("cola",50)
+    # if foods:
+    #     for food in foods:
+    #         print(food.name,food.per,food.calories,food.fat,food.carbs,food.protein,food.url)
+    # else:
+    #     print("no data")
+    food = get_foods("apple",1)[0]
+    print(save_diet(food,"chench1",'fsdaasdfas'))
