@@ -54,7 +54,8 @@ def save_diet(food: Food, account, machine_id):
         sql = "UPDATE Daily SET calories=%s,fat=%s,carbs=%s,protein=%s WHERE account=%s and machine_id= %s;"
         calories, fat, carbs, protein = row[0]+food.calories, row[1]+food.fat, row[2]+food.carbs, row[3]+food.protein
         try:
-            cursor.execute(sql,(calories, fat, carbs, protein, account, machine_id))
+
+            cursor.execute(sql,(calories, fat, carbs, protein, account, machine_id)
             db.commit()
         except:
             print('Update fail')
