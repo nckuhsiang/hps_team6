@@ -32,10 +32,10 @@ def image_process_to_tensor(img):
 
 def predict(input_tensor,interpreter,classes_name,threshold=0.55):
     '''
-    @ input_tensor: input tensor(processed image)
-    @ interpreter: tf-lite interpreter
-    @ classes_name: classes name
-    @ threshold: threshold for prediction if lower than threshold, then predict other
+    @input_tensor: input tensor(processed image)
+    @interpreter: tf-lite interpreter
+    @classes_name: classes name
+    @threshold: threshold for prediction if lower than threshold, then predict other
     '''
     # Get input and output tensors.
     input_details = interpreter.get_input_details()
