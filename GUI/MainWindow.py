@@ -9,7 +9,7 @@ class MainWindow(QMainWindow):
         change_page.triggered.connect(self.changePage)
 
     def initializeUI(self):
-        self.setMinimumSize(1024, 600)
+        self.setMinimumSize(1024, 570)
         self.setWindowTitle("Fiteat")
         self.setWindowIcon(QIcon(file_path+"images/logo_rgb.png"))
         self.welcome_page = WelcomePage()

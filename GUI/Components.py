@@ -16,9 +16,9 @@ h_expander = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
 v_expander = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
 change_page = QAction(None)
 
-font_title_size = 160
-font_subtitle_size = 64
-font_normal_size = 24
+font_title_size = 180
+font_subtitle_size = 70
+font_normal_size = 26
 
 def initIcon():
     global person_black, person_red, person_yellow, close_black, close_red, plus_yellow
