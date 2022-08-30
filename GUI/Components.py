@@ -8,6 +8,7 @@ from StyleSheet import style_sheet
 from numpy import ndarray
 import UserAPI
 import BarcodeAPI
+import subprocess
 
 app = QApplication(sys.argv)
 app.setStyleSheet(style_sheet)
@@ -140,8 +141,8 @@ class CheckBtn(QPushButton):
         self.setText(text)
         self.setFont(QFont("Agency FB", font_normal_size))
         self.setCheckable(True)
-        self.setMaximumHeight(65)
-        self.setMinimumHeight(65)
+        self.setMaximumHeight(60)
+        self.setMinimumHeight(60)
 
 class MenuItem():
     def __init__(self):
@@ -182,17 +183,18 @@ class MenuItem():
 class LineEdit(QLineEdit):
     def __init__(self):
         super().__init__()
+        self.setFocusPolicy(Qt.ClickFocus)
     def focusInEvent(self, event):
         super().focusInEvent(event)
-        print('onboard')
+        subprocess.run("onboard", shell=True)
     def focusOutEvent(self, event):
         super().focusOutEvent(event)
+        subprocess.run("dbus-send --type=method_call --print-reply --dest=org.onboard.Onboard /org/onboard/Onboard/Keyboard org.onboard.Onboard.Keyboard.Hide", shell=True)
 
 class WeightEditLine(LineEdit):
     def __init__(self, text = ""):
         super().__init__()
         self.setText(text)
-        self.setFocusPolicy(Qt.ClickFocus)
         self.setAlignment(Qt.AlignRight)
         self.setStyleSheet("border-color: #FFC000;")
         self.setValidator(QRegExpValidator(QRegExp("^(([0-9]+\.[0-9]*[1-9][0-9]*)|([0-9]*[1-9][0-9]*\.[0-9]+)|([0-9]*[1-9][0-9]*))$")))
@@ -326,8 +328,10 @@ class CameraThread(QThread):
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 self.frame_data_updated.emit(frame)
                 time.sleep(0.03)
+        capture.release()
+        print("release")
 
     def stopThread(self):
         """Process all pending events before stopping the thread."""
-        self.wait()
+        #self.wait()
         QApplication.processEvents()

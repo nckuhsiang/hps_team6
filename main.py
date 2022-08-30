@@ -18,6 +18,6 @@ if __name__ == '__main__':
     getUserListFromLocal()
     initIcon()
     main_window = MainWindow()
-    main_window.show()
-    #main_window.showFullScreen()
+    #main_window.show()
+    main_window.showMaximized()
     sys.exit(app.exec_())

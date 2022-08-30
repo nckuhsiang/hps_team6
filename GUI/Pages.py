@@ -32,7 +32,7 @@ class WelcomePage(QWidget):
         self.title_r_box.addWidget(self.title_r)
 
         pixmap = QPixmap(file_path+"images/logo.png")
-        self.logo_pixmap = pixmap.scaledToWidth(180)
+        self.logo_pixmap = pixmap.scaledToWidth(160)
         self.logo_lbl = QLabel()
         
         self.sub_title = QLabel(" 2022 Google HPS ")
@@ -70,13 +70,13 @@ class WelcomePage(QWidget):
 
     def animate(self):
         self.counter += 1
-        if self.counter > 0 and self.counter <= 90:
+        if self.counter > 0 and self.counter <= 80:
             self.logo_lbl.setMinimumWidth(self.counter*2)
             self.black_bar_left.setMinimumWidth(70+self.counter)
             self.black_bar_right.setMinimumWidth(70+self.counter)
-        if self.counter == 90:
+        if self.counter == 80:
             self.logo_lbl.setPixmap(self.logo_pixmap)
-        if self.counter == 120:
+        if self.counter == 110:
             self.timer.stop()
             var.page.append("Start")
             change_page.trigger()
@@ -179,6 +179,7 @@ class SignInPage(QWidget):
         super().__init__()
         self.initializeUI()
         self.setFocusPolicy(Qt.ClickFocus)
+        self.line_edit.returnPressed.connect(self.jumpToMenuPage)
         self.create_account_btn.clicked.connect(self.jumpToEnterInfoPage)
         self.cancel_btn.clicked.connect(self.jumpToLastPage)
         self.signin_btn.clicked.connect(self.jumpToMenuPage)
@@ -318,6 +319,7 @@ class MenuPage(QWidget):
 
     def jumpToStartPage(self):
         var.page = ["Start"]
+        var.back_flag = True
         change_page.trigger()
 
 class ScanPackagePage(QWidget):
@@ -367,13 +369,13 @@ class ScanPackagePage(QWidget):
 
     def jumpToLastPage(self):
         if self.thread_is_running:
-            self.camera_thread.quit()
+            self.thread_is_running = False
         var.backToLastPage()
         change_page.trigger()
 
     def jumpToEntryPage(self):
         if self.thread_is_running:
-            self.camera_thread.quit()
+            self.thread_is_running = False
         var.page.append("Enter Barcode")
         change_page.trigger()
 
@@ -533,6 +535,7 @@ class EnterInfoPage(ScanPackagePage):
         self.layout.addLayout(self.sub_layout_right)
 
         self.user_name_line_edit.textChanged.connect(self.textName)
+        self.user_name_line_edit.editingFinished.connect(self.setFocus)
         self.height_line_edit.textChanged.connect(self.textHeight)
         self.weight_line_edit.textChanged.connect(self.textWeight)
         self.height_line_edit.editingFinished.connect(self.changeValue)
@@ -558,6 +561,7 @@ class EnterInfoPage(ScanPackagePage):
         self.weight_unit_lbl.setStyleSheet("color: #000000;")
 
     def changeValue(self):
+        self.setFocus()
         height_text = self.height_line_edit.text()
         weight_text = self.weight_line_edit.text()
         self.height = 0 if (height_text == '') else float(height_text)
@@ -824,6 +828,7 @@ class ShowDietPage(QWidget):
 
     def leavePage(self):
         var.page = ["Menu"]
+        var.back_flag = True
         change_page.trigger()
 
 class EnterFoodNamePage(QWidget):
@@ -888,6 +893,7 @@ class EnterFoodNamePage(QWidget):
         self.setLayout(self.layout)
 
     def searchFood(self):
+        self.setFocus()
         self.btn_scrollarea.setVisible(False)
         food_name = self.line_edit.text()
         var.food_list = FoodAPI.get_foods(food_name, 30)

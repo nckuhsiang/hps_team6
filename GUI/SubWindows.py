@@ -20,6 +20,7 @@ class MsgWindow(QWidget):
 
     def setMsg(self, msg):
         self.msg_lbl.setText('ERROR: '+msg)
+        self.move(250, 100)
 
 msg_window = MsgWindow()
 
@@ -47,6 +48,7 @@ class IDWindow(QWidget):
         self.setLayout(self.layout)
 
     def setupLineEdit(self):
+        self.move(250, 100)
         self.id_lineEdit.setText(var.id)
         self.id_lineEdit.setStyleSheet("color: #000000; border-color: #000000;")
 
