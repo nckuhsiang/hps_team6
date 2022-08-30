@@ -285,7 +285,7 @@ class MenuPage(QWidget):
         self.scan_pkg.setupName("Scan food\npackage")
         self.scan_pkg.setupImage("scan_package")
         self.detect_food = MenuItem()
-        self.detect_food.setupName("Detect and\nweight food")
+        self.detect_food.setupName("Detect and\nweigh food")
         self.detect_food.setupImage("detect_food")
         self.enter_info = MenuItem()
         self.enter_info.setupName("Enter\npersonal info")
