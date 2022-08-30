@@ -399,7 +399,7 @@ class ScanPackagePage(QWidget):
 class DetectFoodPage(ScanPackagePage):
     def __init__(self):  
         super().__init__()
-        self.title.setText("Detect\nand\nweight\nfood")
+        self.title.setText("Detect\nand\nweigh\nfood")
         self.weight_lbl = QLabel("0.0"+" g ") # TODO: change weight number
         self.weight_lbl.setMinimumWidth(120)
         self.weight_lbl.setAlignment(Qt.AlignCenter | Qt.AlignRight)
