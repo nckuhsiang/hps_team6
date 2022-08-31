@@ -1,4 +1,18 @@
+# Raspberry settings before starting
 
+## 設定WiFi
+> 需要帶樹莓派的請先設定好Wifi
+- SSID：HPS-team6
+  - Password：HPS-team6-password
+
+## 固定Hostname 
+(這樣才不用還要找IP位置)
+1. `sudo raspi-config`
+2. 進入`1 System Options`
+3. 選擇 `Hostname` 更改好之後重新開機
+
+
+---
 # Use cases
 
 ## Core Functions
