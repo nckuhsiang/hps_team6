@@ -34,6 +34,7 @@
   - 掃描失敗手動輸入
   - Hector輸入後端Barcode Table’s data
 
+![](https://memecreator.org/static/images/memes/5201835.jpg)
 
 # Issues
 
