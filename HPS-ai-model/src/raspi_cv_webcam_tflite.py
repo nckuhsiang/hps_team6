@@ -7,7 +7,7 @@ import tflite_runtime.interpreter as tflite
 
 
 dir = "model"
-model_name = "inceptionv3_0825"
+model_name = "mobilenetv2"
 tf_lite_path = "{}.tflite".format(model_name)
 
 # Load the TFLite model and allocate tensors.

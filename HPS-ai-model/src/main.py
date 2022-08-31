@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
-import tensorflow as tf
+# import tensorflow as tf
+import tflite_runtime.interpreter as tflite
 import json
 
 
@@ -8,18 +9,20 @@ model_name = "mobilenetv2"
 # tf_lite_path = "{}/{}.tflite".format(dir,model_name)
 tf_lite_path = "{}.tflite".format(model_name)
 
+# # Load the TFLite model and allocate tensors.
+# interpreter = tf.lite.Interpreter(tf_lite_path)
+# interpreter.allocate_tensors()
+
 # Load the TFLite model and allocate tensors.
-interpreter = tf.lite.Interpreter(tf_lite_path)
+interpreter = tflite.Interpreter(tf_lite_path)
 interpreter.allocate_tensors()
-
-
 
 # load the classes in json file
 classes = ['Apple', 'Banana', 'Grape', 'Guava', 'Tomato', 'dumplings', \
     'french_fries', 'ice_cream', 'other', 'pizza', 'steak', 'sushi']
 
 # setting the camera
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
