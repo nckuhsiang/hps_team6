@@ -3,7 +3,7 @@ import numpy as np
 # import tensorflow as tf
 import tflite_runtime.interpreter as tflite
 
-def get_food_by_recognition(image):
+def load_model():
     model_name = "mobilenetv2"
     # tf_lite_path = "{}/{}.tflite".format(dir,model_name)
     tf_lite_path = "{}.tflite".format(model_name)
@@ -15,6 +15,10 @@ def get_food_by_recognition(image):
     # Load the TFLite model and allocate tensors.
     interpreter = tflite.Interpreter(tf_lite_path)
     interpreter.allocate_tensors()
+    return interpreter
+
+
+def get_food_by_recognition(image,interpreter):
     # load the classes in json file
     classes = ['Apple', 'Banana', 'Grape', 'Guava', 'Tomato', 'dumplings', \
         'french_fries', 'ice_cream', 'other', 'pizza', 'steak', 'sushi']
@@ -56,4 +60,5 @@ def predict(input_tensor,interpreter,classes,threshold=0.55):
 
 # if __name__ == "__main__":
 #     img = cv2.imread("./pizza.jpeg")
-#     print(get_food_by_recognition(img))
+#     model =load_model()
+#     print(get_food_by_recognition(img,model))
