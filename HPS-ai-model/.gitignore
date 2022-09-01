@@ -1,7 +1,0 @@
-model/*
-*.onnx
-*.zip
-src/__pycache__
-image
-img
-.DS_Store
