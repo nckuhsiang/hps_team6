@@ -1,53 +1,15 @@
 import cv2
 import numpy as np
-# import tensorflow as tf
-import tflite_runtime.interpreter as tflite
-import json
+import tensorflow as tf
+# import tflite_runtime.interpreter as tflite
 
-def get_food_by_recognition(image):
-    model_name = "mobilenetv2"
-    # tf_lite_path = "{}/{}.tflite".format(dir,model_name)
-    tf_lite_path = "{}.tflite".format(model_name)
-
-    # # Load the TFLite model and allocate tensors.
-    # interpreter = tf.lite.Interpreter(tf_lite_path)
-    # interpreter.allocate_tensors()
-
-    # Load the TFLite model and allocate tensors.
-    interpreter = tflite.Interpreter(tf_lite_path)
-    interpreter.allocate_tensors()
-    # load the classes in json file
-    classes = ['Apple', 'Banana', 'Grape', 'Guava', 'Tomato', 'dumplings', \
-        'french_fries', 'ice_cream', 'other', 'pizza', 'steak', 'sushi']
-    tensor = image_process_to_tensor(image)
-    prediction,classes_name,npmax = predict(tensor,interpreter,classes)
-    print(prediction,classes_name,npmax)
-    return classes_name
-
-
-
-model_name = "mobilenetv2"
-# tf_lite_path = "{}/{}.tflite".format(dir,model_name)
-tf_lite_path = "{}.tflite".format(model_name)
-
-# # Load the TFLite model and allocate tensors.
-# interpreter = tf.lite.Interpreter(tf_lite_path)
-# interpreter.allocate_tensors()
-
-# Load the TFLite model and allocate tensors.
-interpreter = tflite.Interpreter(tf_lite_path)
-interpreter.allocate_tensors()
-
-# load the classes in json file
-classes = ['Apple', 'Banana', 'Grape', 'Guava', 'Tomato', 'dumplings', \
-    'french_fries', 'ice_cream', 'other', 'pizza', 'steak', 'sushi']
-
-# setting the camera
-cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
 def image_process_to_tensor(img):
+    '''
+    This function is used to process image to tensor(a.k.a. image preprocessing)
+    @img: image
+    @return: tensor(processed image)
+    '''
     image = cv2.resize(img,(224,224))        
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     #Expand dimensions to match the 4D Tensor shape.
@@ -79,6 +41,25 @@ def predict(input_tensor,interpreter,classes_name,threshold=0.55):
         return -1,classes_name[predicted_index],np.max(prediction_scores)
 
 
+
+# setting the camera
+cap = cv2.VideoCapture(1)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+
+model_name = "HPS-ai-model/mobilenetv2_0901.tflite"
+tf_lite_path = model_name
+# Load the TFLite model and allocate tensors.
+interpreter = tf.lite.Interpreter(tf_lite_path)
+# interpreter = tflite.Interpreter(tf_lite_path)
+interpreter.allocate_tensors()
+# load the classes name
+classes = ['Apple', 'Banana', 'Grape', 'Guava', 'Tomato', 'dumplings', \
+    'french_fries', 'ice_cream', 'other', 'pizza', 'steak', 'sushi']
+
+
+
 while True:
     _, frame = cap.read()
     
@@ -98,4 +79,4 @@ cap.release()
 cv2.destroyAllWindows()
 
 
-# random sample from [0 , 1 , 1]
+
