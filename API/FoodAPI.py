@@ -34,7 +34,7 @@ def get_foods(name,num):
 def get_daily_diet(account, machine_id):
     db = conncet()
     cursor = db.cursor()
-    sql = "SELECT calories,fat,carbs,protein FROM Daily WHERE account=%s and machine_id=%s;"
+    sql = "SELECT calories,fat,carbs,protein FROM Daily WHERE binary account=%s and binary machine_id=%s;"
     cursor.execute(sql,(account, machine_id))
     row = cursor.fetchone()
     if row:
@@ -45,13 +45,13 @@ def get_daily_diet(account, machine_id):
 def save_diet(food: Food, account, machine_id):
     db = conncet()
     cursor = db.cursor()
-    sql = "SELECT calories,fat,carbs,protein FROM Daily WHERE account=%s and machine_id= %s;"
+    sql = "SELECT calories,fat,carbs,protein FROM Daily WHERE binary account=%s and binary machine_id= %s;"
     cursor.execute(sql,(account, machine_id))
     row = cursor.fetchone()
     calories, fat, carbs, protein = food.calories, food.fat, food.carbs, food.protein
 
     if row: #if data is already in daily
-        sql = "UPDATE Daily SET calories=%s,fat=%s,carbs=%s,protein=%s WHERE account=%s and machine_id= %s;"
+        sql = "UPDATE Daily SET calories=%s,fat=%s,carbs=%s,protein=%s WHERE binary account=%s and binary machine_id= %s;"
         calories, fat, carbs, protein = row[0]+food.calories, row[1]+food.fat, row[2]+food.carbs, row[3]+food.protein
         try:
             cursor.execute(sql,(calories, fat, carbs, protein, account, machine_id))
