@@ -1,6 +1,7 @@
 src/__pycache__
 API/__pycache__
 GUI/__pycache__
+__pycache__
 image
 img
 .DS_Store
