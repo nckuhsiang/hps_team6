@@ -3,7 +3,7 @@ import numpy as np
 
 # img_path = "/content/drive/MyDrive/hps/barcode_img"
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 # cap.setCaptureProperty(cv2.CAP_PROP_FRAME_WIDTH, 640)
 # cap.setCaptureProperty(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
@@ -20,9 +20,10 @@ while True:
     
     #  Detect and decode the barcode
     ok, decoded_info, decoded_type, corners = bardet.detectAndDecode(img)
-    print(ok, decoded_info, decoded_type, corners)
+    # print(ok, decoded_info, decoded_type, corners)
     if not type(corners) == type(None):
         cv2.polylines(img,np.int32(corners),1,(0,255,255))
+        print(decoded_info)
     cv2.imshow("out",img)
     
     key=cv2.waitKey(1)

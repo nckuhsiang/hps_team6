@@ -21,7 +21,7 @@ show_image = False
 now = datetime.now().time() # time object
 now = now.strftime("%H_%M_%S") # time string
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 out = cv2.VideoWriter('output_{}.avi'.format(now), fourcc, 20.0, (640,480))
@@ -35,6 +35,9 @@ while(cap.isOpened()):
         ret, frame = cap.read()
         if show_image:
             cv2.imshow("out",frame)
+            key=cv2.waitKey(1)
+            if key == ord('q'):
+                    break
         if ret==True:
             frame = cv2.flip(frame,0)
             out.write(frame)
@@ -43,6 +46,7 @@ while(cap.isOpened()):
         break
     except:
         break
+
 
 cap.release()
 out.release()
