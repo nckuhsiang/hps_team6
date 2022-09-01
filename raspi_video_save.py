@@ -3,7 +3,7 @@ import cv2
 from datetime import datetime
 
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 # get data and time 

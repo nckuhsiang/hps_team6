@@ -4,6 +4,7 @@ import GlobalVar as var
 import UserAPI
 import FoodAPI
 import BarcodeAPI
+import WeightAPI
 import time
 
 class WelcomePage(QWidget):
@@ -344,7 +345,7 @@ class ScanPackagePage(QWidget):
 
         self.camara_lbl = QLabel()
         self.camara_lbl.setObjectName("camara_lbl")
-        self.camara_lbl.setStyleSheet("#camara_lbl{background-color: #FFFFFF;}") # TODO: change this line to get camera image
+        self.camara_lbl.setStyleSheet("#camara_lbl{background-color: #FFFFFF;}")
         self.camara_lbl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self.sub_layout = QVBoxLayout()
@@ -400,7 +401,7 @@ class DetectFoodPage(ScanPackagePage):
     def __init__(self):  
         super().__init__()
         self.title.setText("Detect\nand\nweigh\nfood")
-        self.weight_lbl = QLabel("0.0"+" g ") # TODO: change weight number
+        self.weight_lbl = QLabel("0"+" g ")
         self.weight_lbl.setMinimumWidth(120)
         self.weight_lbl.setAlignment(Qt.AlignCenter | Qt.AlignRight)
         self.weight_lbl.setFont(QFont("Agency FB", font_normal_size))
@@ -416,6 +417,20 @@ class DetectFoodPage(ScanPackagePage):
         self.v_box = QVBoxLayout(self.camara_lbl)
         self.v_box.addLayout(self.h_box)
         self.v_box.addItem(v_expander)
+        
+        self.tare_btn.clicked.connect(self.changeOffsetWeight)
+        self.offset = 0
+
+    def changeOffsetWeight(self):
+        weight_lbl_text = self.weight_lbl.text()
+        self.offset = int(weight_lbl_text.split()[0])
+        
+    def updateVideoFrames(self, video_frame: ndarray):
+        super().updateVideoFrames(video_frame)
+        weight = WeightAPI.getWeight()
+        self.weight_lbl.setText(str(weight-self.offset)+" g ")
+        if weight > 0:
+            print('detect food') # TODO
 
     def jumpToEntryPage(self):
         var.page.append("Enter Food Name")
