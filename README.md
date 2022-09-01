@@ -1,5 +1,6 @@
-# Raspberry settings before starting
+<!-- # 記得寫.gitignore -->
 
+# Raspberry settings before starting
 ## 設定WiFi
 > 需要帶樹莓派的請先設定好Wifi
 - SSID：HPS-team6
