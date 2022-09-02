@@ -4,6 +4,7 @@ import GlobalVar as var
 import UserAPI
 import FoodAPI
 import BarcodeAPI
+import WeightAPI
 import time
 
 class WelcomePage(QWidget):
@@ -32,7 +33,7 @@ class WelcomePage(QWidget):
         self.title_r_box.addWidget(self.title_r)
 
         pixmap = QPixmap(file_path+"images/logo.png")
-        self.logo_pixmap = pixmap.scaledToWidth(180)
+        self.logo_pixmap = pixmap.scaledToWidth(160)
         self.logo_lbl = QLabel()
         
         self.sub_title = QLabel(" 2022 Google HPS ")
@@ -70,13 +71,13 @@ class WelcomePage(QWidget):
 
     def animate(self):
         self.counter += 1
-        if self.counter > 0 and self.counter <= 90:
+        if self.counter > 0 and self.counter <= 80:
             self.logo_lbl.setMinimumWidth(self.counter*2)
             self.black_bar_left.setMinimumWidth(70+self.counter)
             self.black_bar_right.setMinimumWidth(70+self.counter)
-        if self.counter == 90:
+        if self.counter == 80:
             self.logo_lbl.setPixmap(self.logo_pixmap)
-        if self.counter == 120:
+        if self.counter == 110:
             self.timer.stop()
             var.page.append("Start")
             change_page.trigger()
@@ -179,6 +180,7 @@ class SignInPage(QWidget):
         super().__init__()
         self.initializeUI()
         self.setFocusPolicy(Qt.ClickFocus)
+        self.line_edit.returnPressed.connect(self.jumpToMenuPage)
         self.create_account_btn.clicked.connect(self.jumpToEnterInfoPage)
         self.cancel_btn.clicked.connect(self.jumpToLastPage)
         self.signin_btn.clicked.connect(self.jumpToMenuPage)
@@ -194,7 +196,7 @@ class SignInPage(QWidget):
         self.user_icon_lbl.setPixmap(self.user_icon)
         self.user_name_lbl = QLabel("User Name ")
         self.user_name_lbl.setFont(QFont("Agency FB", font_normal_size))
-        self.line_edit = QLineEdit()
+        self.line_edit = LineEdit()
         self.line_edit.setMinimumHeight(70)
         self.create_account_btn = BlackBtn("Create new account", icon="plus_yellow")
         self.cancel_btn = BlackBtn("Cancel")
@@ -284,7 +286,7 @@ class MenuPage(QWidget):
         self.scan_pkg.setupName("Scan food\npackage")
         self.scan_pkg.setupImage("scan_package")
         self.detect_food = MenuItem()
-        self.detect_food.setupName("Detect and\nweight food")
+        self.detect_food.setupName("Detect and\nweigh food")
         self.detect_food.setupImage("detect_food")
         self.enter_info = MenuItem()
         self.enter_info.setupName("Enter\npersonal info")
@@ -343,7 +345,7 @@ class ScanPackagePage(QWidget):
 
         self.camara_lbl = QLabel()
         self.camara_lbl.setObjectName("camara_lbl")
-        self.camara_lbl.setStyleSheet("#camara_lbl{background-color: #FFFFFF;}") # TODO: change this line to get camera image
+        self.camara_lbl.setStyleSheet("#camara_lbl{background-color: #FFFFFF;}")
         self.camara_lbl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self.sub_layout = QVBoxLayout()
@@ -368,13 +370,13 @@ class ScanPackagePage(QWidget):
 
     def jumpToLastPage(self):
         if self.thread_is_running:
-            self.camera_thread.quit()
+            self.thread_is_running = False
         var.backToLastPage()
         change_page.trigger()
 
     def jumpToEntryPage(self):
         if self.thread_is_running:
-            self.camera_thread.quit()
+            self.thread_is_running = False
         var.page.append("Enter Barcode")
         change_page.trigger()
 
@@ -398,8 +400,8 @@ class ScanPackagePage(QWidget):
 class DetectFoodPage(ScanPackagePage):
     def __init__(self):  
         super().__init__()
-        self.title.setText("Detect\nand\nweight\nfood")
-        self.weight_lbl = QLabel("0.0"+" g ") # TODO: change weight number
+        self.title.setText("Detect\nand\nweigh\nfood")
+        self.weight_lbl = QLabel("0"+" g ")
         self.weight_lbl.setMinimumWidth(120)
         self.weight_lbl.setAlignment(Qt.AlignCenter | Qt.AlignRight)
         self.weight_lbl.setFont(QFont("Agency FB", font_normal_size))
@@ -415,6 +417,20 @@ class DetectFoodPage(ScanPackagePage):
         self.v_box = QVBoxLayout(self.camara_lbl)
         self.v_box.addLayout(self.h_box)
         self.v_box.addItem(v_expander)
+        
+        self.tare_btn.clicked.connect(self.changeOffsetWeight)
+        self.offset = 0
+
+    def changeOffsetWeight(self):
+        weight_lbl_text = self.weight_lbl.text()
+        self.offset = int(weight_lbl_text.split()[0])
+        
+    def updateVideoFrames(self, video_frame: ndarray):
+        super().updateVideoFrames(video_frame)
+        weight = WeightAPI.getWeight()
+        self.weight_lbl.setText(str(weight-self.offset)+" g ")
+        if weight > 0:
+            print('detect food') # TODO
 
     def jumpToEntryPage(self):
         var.page.append("Enter Food Name")
@@ -427,12 +443,12 @@ class EnterInfoPage(ScanPackagePage):
         self.setFocusPolicy(Qt.ClickFocus)
         self.user_name_lbl = QLabel("User Name  ")
         self.user_name_lbl.setFont(QFont("Agency FB", font_normal_size))
-        self.user_name_line_edit = QLineEdit()
+        self.user_name_line_edit = LineEdit()
         self.user_name_line_edit.setMaximumHeight(70)
 
         self.height_lbl = QLabel("Height")
         self.height_lbl.setFont(QFont("Agency FB", font_normal_size))
-        self.height_line_edit = QLineEdit()
+        self.height_line_edit = LineEdit()
         self.height_line_edit.setMaximumHeight(70)
         self.height_line_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.height_line_edit.setValidator(QRegExpValidator(QRegExp("^(([0-9]+\.[0-9]*[1-9][0-9]*)|([0-9]*[1-9][0-9]*\.[0-9]+)|([0-9]*[1-9][0-9]*))$")))
@@ -446,7 +462,7 @@ class EnterInfoPage(ScanPackagePage):
 
         self.weight_lbl = QLabel("Weight")
         self.weight_lbl.setFont(QFont("Agency FB", font_normal_size))
-        self.weight_line_edit = QLineEdit()
+        self.weight_line_edit = LineEdit()
         self.weight_line_edit.setMaximumHeight(70)
         self.weight_line_edit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.weight_line_edit.setValidator(QRegExpValidator(QRegExp("^(([0-9]+\.[0-9]*[1-9][0-9]*)|([0-9]*[1-9][0-9]*\.[0-9]+)|([0-9]*[1-9][0-9]*))$")))
@@ -534,6 +550,7 @@ class EnterInfoPage(ScanPackagePage):
         self.layout.addLayout(self.sub_layout_right)
 
         self.user_name_line_edit.textChanged.connect(self.textName)
+        self.user_name_line_edit.editingFinished.connect(self.setFocus)
         self.height_line_edit.textChanged.connect(self.textHeight)
         self.weight_line_edit.textChanged.connect(self.textWeight)
         self.height_line_edit.editingFinished.connect(self.changeValue)
@@ -559,6 +576,7 @@ class EnterInfoPage(ScanPackagePage):
         self.weight_unit_lbl.setStyleSheet("color: #000000;")
 
     def changeValue(self):
+        self.setFocus()
         height_text = self.height_line_edit.text()
         weight_text = self.weight_line_edit.text()
         self.height = 0 if (height_text == '') else float(height_text)
@@ -825,6 +843,7 @@ class ShowDietPage(QWidget):
 
     def leavePage(self):
         var.page = ["Menu"]
+        var.back_flag = True
         change_page.trigger()
 
 class EnterFoodNamePage(QWidget):
@@ -857,7 +876,7 @@ class EnterFoodNamePage(QWidget):
 
         self.text_lbl = QLabel("Food name:")
         self.text_lbl.setFont(QFont("Agency FB", font_normal_size+3))
-        self.line_edit = QLineEdit()
+        self.line_edit = LineEdit()
         self.search_btn = BlackBtn("Search")
         self.search_btn.setMinimumWidth(150)
         self.black_bar = BlackBar()
@@ -889,6 +908,7 @@ class EnterFoodNamePage(QWidget):
         self.setLayout(self.layout)
 
     def searchFood(self):
+        self.setFocus()
         self.btn_scrollarea.setVisible(False)
         food_name = self.line_edit.text()
         var.food_list = FoodAPI.get_foods(food_name, 30)

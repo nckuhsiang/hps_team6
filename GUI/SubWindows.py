@@ -20,6 +20,7 @@ class MsgWindow(QWidget):
 
     def setMsg(self, msg):
         self.msg_lbl.setText('ERROR: '+msg)
+        self.move(250, 100)
 
 msg_window = MsgWindow()
 
@@ -29,7 +30,8 @@ class IDWindow(QWidget):
         self.setWindowTitle("Enter your old machine ID")
         self.id_lbl = QLabel(" ID: ")
         self.id_lbl.setFont(QFont("Agency FB", font_normal_size))
-        self.id_lineEdit = QLineEdit(var.id)
+        self.id_lineEdit = LineEdit()
+        self.id_lineEdit.setText(var.id)
         self.id_lineEdit.returnPressed.connect(self.changeID)
         self.id_lineEdit.textChanged.connect(self.checkTextFormat)
         self.change_btn = BlackBtn("Change")
@@ -46,6 +48,7 @@ class IDWindow(QWidget):
         self.setLayout(self.layout)
 
     def setupLineEdit(self):
+        self.move(250, 100)
         self.id_lineEdit.setText(var.id)
         self.id_lineEdit.setStyleSheet("color: #000000; border-color: #000000;")
 
