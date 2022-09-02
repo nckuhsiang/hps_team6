@@ -35,7 +35,11 @@ def get_foods(name,num):
 def get_daily_diet(account, machine_id):
     db = conncet()
     cursor = db.cursor()
+<<<<<<< HEAD
     sql = "SELECT calories,fat,carbs,protein FROM Daily WHERE binary account=%s and binary machine_id= %s;"
+=======
+    sql = "SELECT calories,fat,carbs,protein FROM Daily WHERE binary account=%s and binary machine_id=%s;"
+>>>>>>> 03553848b4a20d7aa6696fb0646125f755fabc07
     cursor.execute(sql,(account, machine_id))
     row = cursor.fetchone()
     if row:
@@ -52,10 +56,16 @@ def save_diet(food: Food, account, machine_id):
     calories, fat, carbs, protein = food.calories, food.fat, food.carbs, food.protein
 
     if row: #if data is already in daily
+<<<<<<< HEAD
         sql = "UPDATE Daily SET calories=%s,fat=%s,carbs=%s,protein=%s WHERE binary account=%s and binary machine_id=%s;"
         calories, fat, carbs, protein = row[0]+food.calories, row[1]+food.fat, row[2]+food.carbs, row[3]+food.protein
         try:
             print(calories,fat,carbs,protein,account,machine_id)
+=======
+        sql = "UPDATE Daily SET calories=%s,fat=%s,carbs=%s,protein=%s WHERE binary account=%s and binary machine_id= %s;"
+        calories, fat, carbs, protein = row[0]+food.calories, row[1]+food.fat, row[2]+food.carbs, row[3]+food.protein
+        try:
+>>>>>>> 03553848b4a20d7aa6696fb0646125f755fabc07
             cursor.execute(sql,(calories, fat, carbs, protein, account, machine_id))
             db.commit()
         except:

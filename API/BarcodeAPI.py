@@ -79,8 +79,9 @@ def detectBarcode(frame: ndarray):
         if val < 10800:
             frame_gray[:,idx] = 0
     _, frame_gray = cv2.threshold(frame_gray, 128, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
-    for barcode in decode(frame_gray):
+    #frame = cv2.cvtColor(frame_gray, cv2.COLOR_GRAY2RGB)
+    
+    for barcode in decode(frame):
         barcode_number = barcode.data.decode('utf-8')
         # get food name from mySQL
         food_name = getFoodName(barcode_number)[0]
@@ -106,4 +107,5 @@ def getFoodName(barcode):
 if __name__ == '__main__':
     img_file = ((os.path.dirname(os.path.abspath(__file__)))+'/test_img.jpg')
     img = cv2.imread(img_file)
-    detectBarcode(img)
+    frame, food_name = detectBarcode(img)
+    print(food_name)

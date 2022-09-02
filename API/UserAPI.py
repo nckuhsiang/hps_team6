@@ -1,5 +1,8 @@
 from dbconnect import conncet
+<<<<<<< HEAD
 
+=======
+>>>>>>> 03553848b4a20d7aa6696fb0646125f755fabc07
 
 def checkAccount(account, machine_id):
     db = conncet()
@@ -19,7 +22,11 @@ def createUser(user): # user = (account,machine_id,height,weight,workload,gender
     db = conncet()
     cursor = db.cursor()
     sql = "INSERT INTO User (account,machine_id,height,weight,workload,gender,calories,fat,carbs,protein) \
+<<<<<<< HEAD
         VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+=======
+           VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
+>>>>>>> 03553848b4a20d7aa6696fb0646125f755fabc07
     try:
         cursor.execute(sql,user)
         db.commit()
@@ -34,13 +41,13 @@ def updateMachineID(old_id,new_id):
     result = True
     db = conncet()
     #check if new_id exist
-    sql = "SELECT machine_id FROM User WHERE machine_id = %s;"
+    sql = "SELECT machine_id FROM User WHERE binary machine_id = %s;"
     cursor = db.cursor()
     cursor.execute(sql,(new_id))
     row = cursor.fetchone()
     if not row:
         return False
-    sql = "UPDATE User SET machine_id=%s WHERE machine_id=%s;"
+    sql = "UPDATE User SET machine_id=%s WHERE binary machine_id=%s;"
     try:
         cursor.execute(sql,(new_id,old_id))
         db.commit()
@@ -56,7 +63,12 @@ def updateUser(user): #user= (height,weight,workload,gender,calories,fat,carbs,p
     db = conncet()
     cursor = db.cursor()
     sql = "UPDATE User SET height=%s,weight=%s,workload=%s,gender=%s, \
+<<<<<<< HEAD
         calories=%s,fat=%s,carbs=%s,protein=%s WHERE binary account=%s and binary machine_id= %s;"
+=======
+        calories=%s,fat=%s,carbs=%s,protein=%s WHERE binary account=%s \
+        and binary machine_id= %s;"
+>>>>>>> 03553848b4a20d7aa6696fb0646125f755fabc07
     try:
         cursor.execute(sql,user)
         db.commit()
@@ -67,6 +79,7 @@ def updateUser(user): #user= (height,weight,workload,gender,calories,fat,carbs,p
     db.close()
     return result
     
+<<<<<<< HEAD
 def deleteUser(account,machine_id):
     result = True
     db = conncet()
@@ -74,6 +87,15 @@ def deleteUser(account,machine_id):
     sql = "DELETE FROM User WHERE account=%s and machine_id=%s;"
     try:
         cursor.execute(sql,(account,machine_id))
+=======
+def deleteUser(account, machine_id):
+    result = True
+    db = conncet()
+    cursor = db.cursor()
+    sql = "DELETE FROM User WHERE binary account=%s and binary machine_id=%s;"
+    try:
+        cursor.execute(sql,(account, machine_id))
+>>>>>>> 03553848b4a20d7aa6696fb0646125f755fabc07
         db.commit()
     except:
         db.rollback()
