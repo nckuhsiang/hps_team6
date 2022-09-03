@@ -10,18 +10,22 @@ color = (0, 0, 255)
 def get_food_by_barcode(barcode):
     db = conncet()
     cursor = db.cursor()
-    sql = "SELECT food_name,weight FROM Barcode WHERE id=%s;"
+    sql = "SELECT food_name,weight,calories,fat,carbs,protein FROM Barcode WHERE barcode=%s;"
     cursor.execute(sql,(barcode))
     row = cursor.fetchone()
+    food = dict()
     if row:
-        foods = FoodAPI.get_foods(row[0],1)
-        if foods:
-            return foods[0]
-        else:
-            print("this food doesn't exist")
+        food["name"] = row[0]
+        food["weight"] = row[1]
+        food["calories"] = row[2]
+        food["fat"] = row[3]
+        food["carbs"] = row[4]
+        food["protein"] = row[5]
+        
+        return food
     else:
         print("barcode doesn't exist")
-    return None   
+        return None
 
 def createBarcode(barcode,food_name,weight):
     result = True
@@ -42,7 +46,7 @@ def deleteBarcode(barcode):
     result = True
     db = conncet()
     cursor = db.cursor()
-    sql = "DELETE FROM Barcode WHERE id=%s;"
+    sql = "DELETE FROM Barcode WHERE barcode=%s;"
     try:
         cursor.execute(sql,(barcode))
         db.commit()
@@ -54,12 +58,11 @@ def deleteBarcode(barcode):
     return result
 
 
-
 def updateBarcode(barcode,food_name,weight):
     result = True
     db = conncet()
     cursor = db.cursor()
-    sql = "UPDATE Barcode SET food_name=%s,weight=%s WHERE id=%s;"
+    sql = "UPDATE Barcode SET food_name=%s,weight=%s WHERE barcode=%s;"
     try:
         cursor.execute(sql,(food_name,weight,barcode))
         db.commit()
@@ -105,7 +108,7 @@ def getFoodName(barcode):
     return row
 
 if __name__ == '__main__':
-    img_file = ((os.path.dirname(os.path.abspath(__file__)))+'/test_img.jpg')
-    img = cv2.imread(img_file)
-    frame, food_name = detectBarcode(img)
-    print(food_name)
+    # img_file = ((os.path.dirname(os.path.abspath(__file__)))+'/test_img.jpg')
+    # img = cv2.imread(img_file)
+    print(get_food_by_barcode('test'))
+
