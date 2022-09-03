@@ -4,7 +4,7 @@ from dbconnect import conncet
 import tflite_runtime.interpreter as tflite
 
 def load_model():
-    model_name = "mobilenetv2"
+    model_name = "mobilenetv2_0901"
     # tf_lite_path = "{}/{}.tflite".format(dir,model_name)
     tf_lite_path = "{}.tflite".format(model_name)
 
