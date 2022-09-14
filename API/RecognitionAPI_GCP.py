@@ -6,6 +6,19 @@ import requests
 import base64
 import json
 
+'''
+加入了 `RecognitionAPI_GCP.py`，主要變動如下
+- create_request(image):只需要image就可以 要記得把另一邊呼叫也改一下
+- 需要新增這幾樣 Library
+  ```
+  import requests
+  import base64
+  import json
+  ```
+- 開機不需要再先載入模型，需要辨識時只需呼叫`get_food_by_recognition`
+
+btw:`HPS-ai-model/GCP_https_IO.py` 是可以在自己電腦的執行的，有問題可先試試看這個
+'''
 def create_request(image):
     BASE64_ENCODED_IMAGE = base64.b64encode(cv2.imencode('.jpg', image)[1]).decode()
     return  {
@@ -23,12 +36,7 @@ def create_request(image):
     ]
     }
     
-def get_food_by_recognition(image,interpreter):
-    # # load the classes in json file
-    # classes = ['Apple', 'Banana', 'Grape', 'Guava', 'Tomato', 'dumplings', \
-    #     'french_fries', 'ice_cream', 'other', 'pizza', 'steak', 'sushi']
-    # tensor = image_process_to_tensor(image)
-    # prediction,classes_name,npmax = predict(tensor,interpreter,classes)
+def get_food_by_recognition(image):
       
     classes_name = http_response_detect_labels(image)
     
